@@ -1,12 +1,62 @@
-import { useMemo, useState } from 'react';
-import { Building2, Layers } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { Building2 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export function SettingsPage({ userRole, batchOperationsEnabled, onToggleBatchOperations, onAddBranch, operatorPerformance = [], }) {
-    const isAdmin = userRole === 'admin';
+import { fetchSettings, updateSetting } from '@/services/backendApi/setting';
+
+
+export function SettingsPage({ userRole, onAddBranch, }) {
+  const isAdmin = userRole === 'admin';
   const [branchForm, setBranchForm] = useState({ name: '', location: '' });
   const [addingBranch, setAddingBranch] = useState(false);
+
+  // System settings state
+  const [, setSettings] = useState({});
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsSaving, setSettingsSaving] = useState({});
+  const [settingsError, setSettingsError] = useState(null);
+
+  // Editable fields state
+  const [editFields, setEditFields] = useState({});
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSettingsLoading(true);
+    fetchSettings()
+      .then((data) => {
+        const obj = {};
+        data.forEach(({ name, value }) => { obj[name] = value; });
+        setSettings(obj);
+        setEditFields(obj);
+        setSettingsLoading(false);
+      })
+      .catch(() => {
+        setSettingsError('Failed to load settings');
+        setSettingsLoading(false);
+      });
+  }, [isAdmin]);
+
+  const handleSettingChange = (key, value) => {
+    setEditFields((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleAllSettingsSave = async () => {
+    setSettingsSaving(true);
+    setSettingsError(null);
+    try {
+      await Promise.all(Object.keys(editFields).map(key => updateSetting(key, editFields[key])));
+      setSettings(editFields);
+      toast.success('Settings saved successfully!');
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      setSettingsError('Failed to update settings');
+      toast.error('Failed to save settings');
+    }
+    setSettingsSaving(false);
+  };
 
   const handleAddBranch = async () => {
     if (!isAdmin || typeof onAddBranch !== 'function') {
@@ -28,51 +78,102 @@ export function SettingsPage({ userRole, batchOperationsEnabled, onToggleBatchOp
     }
   };
 
-  const branchPerformance = useMemo(() => {
-    const grouped = operatorPerformance.reduce((acc, item) => {
-      const branchName = item.branch_name || 'No Branch';
-      if (!acc[branchName]) {
-        acc[branchName] = {
-          branchName,
-          operators: 0,
-          simSold: 0,
-          revenue: 0,
-          actions: 0,
-        };
-      }
+  // const branchPerformance = useMemo(() => {
+  //   const grouped = operatorPerformance.reduce((acc, item) => {
+  //     const branchName = item.branch_name || 'No Branch';
+  //     if (!acc[branchName]) {
+  //       acc[branchName] = {
+  //         branchName,
+  //         operators: 0,
+  //         simSold: 0,
+  //         revenue: 0,
+  //         actions: 0,
+  //       };
+  //     }
 
-      acc[branchName].operators += 1;
-      acc[branchName].simSold += Number(item.sim_sales_count || 0);
-      acc[branchName].revenue += Number(item.sim_sales_amount || 0);
-      acc[branchName].actions += Number(item.total_system_actions || 0);
-      return acc;
-    }, {});
+  //     acc[branchName].operators += 1;
+  //     acc[branchName].simSold += Number(item.sim_sales_count || 0);
+  //     acc[branchName].revenue += Number(item.sim_sales_amount || 0);
+  //     acc[branchName].actions += Number(item.total_system_actions || 0);
+  //     return acc;
+  //   }, {});
 
-    return Object.values(grouped).sort((first, second) => second.simSold - first.simSold);
-  }, [operatorPerformance]);
+  //   return Object.values(grouped).sort((first, second) => second.simSold - first.simSold);
+  // }, [operatorPerformance]);
 
     return (<div className="space-y-6">
+
       <div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
         <h2 className="text-lg font-semibold text-[#1f1f1f] mb-1">System Settings</h2>
         <p className="text-sm text-[#828282]">Configure admin features.</p>
-      </div>
-
-      <div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Layers className="w-5 h-5 text-[#1f1f1f]"/>
-          <h3 className="font-semibold text-[#1f1f1f]">Batch Operations</h3>
-        </div>
-
-        <label className="flex items-center justify-between gap-4 p-4 rounded-lg border border-[#f3f3f3]">
-          <div>
-            <p className="text-sm font-medium text-[#1f1f1f]">Enable SIM batch operation mode</p>
-            <p className="text-xs text-[#828282]">Allows admin to select multiple SIMs for bulk status update and delete.</p>
+        {isAdmin && (
+          <div className="mt-6 space-y-4">
+            <h3 className="font-semibold text-[#1f1f1f] mb-2">Scheduler & SIM Management</h3>
+            {settingsLoading ? (
+              <div className="text-sm text-[#828282]">Loading settings...</div>
+            ) : (
+              <>
+                {settingsError && <div className="text-sm text-red-500">{settingsError}</div>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-[#828282] mb-1">Plan Charge Interval (ms)</label>
+                    <Input
+                      type="number"
+                      value={editFields.plan_charge_interval_ms || ''}
+                      onChange={e => handleSettingChange('plan_charge_interval_ms', e.target.value)}
+                      min={10000}
+                      disabled={settingsSaving === true}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#828282] mb-1">Plan Grace Days</label>
+                    <Input
+                      type="number"
+                      value={editFields.plan_grace_days || ''}
+                      onChange={e => handleSettingChange('plan_grace_days', e.target.value)}
+                      min={1}
+                      disabled={settingsSaving === true}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#828282] mb-1">Min Top-up Amount</label>
+                    <Input
+                      type="number"
+                      value={editFields.min_topup_amount || ''}
+                      onChange={e => handleSettingChange('min_topup_amount', e.target.value)}
+                      min={0}
+                      disabled={settingsSaving === true}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#828282] mb-1">Max SIMs per Customer</label>
+                    <Input
+                      type="number"
+                      value={editFields.max_sim_per_customer || ''}
+                      onChange={e => handleSettingChange('max_sim_per_customer', e.target.value)}
+                      min={1}
+                      disabled={settingsSaving === true}
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button
+                    size="sm"
+                    className={`font-semibold rounded-md ${settingsSaving === true ? 'bg-gray-400' : 'bg-[#1f1f1f] hover:bg-[#1f1f1f]/90'} text-white`}
+                    style={{ minWidth: 120, minHeight: 40 }}
+                    disabled={settingsSaving === true}
+                    onClick={handleAllSettingsSave}
+                  >
+                    {settingsSaving === true ? 'Saving...' : 'Save'}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
-          <input type="checkbox" checked={batchOperationsEnabled} disabled={!isAdmin} onChange={(e) => onToggleBatchOperations(e.target.checked)} className="h-5 w-5 accent-[#1f1f1f]"/>
-        </label>
-
-        {!isAdmin && (<p className="text-sm text-[#f6a94c] mt-3">Only administrators can change this setting.</p>)}
+        )}
       </div>
+
+
 
       <div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -108,7 +209,7 @@ export function SettingsPage({ userRole, batchOperationsEnabled, onToggleBatchOp
         {!isAdmin && (<p className="text-sm text-[#f6a94c] mt-3">Only administrators can add branches.</p>)}
       </div>
 
-      {isAdmin && (<div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
+      {/* {isAdmin && (<div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
         <div className="flex items-center gap-2 mb-4">
           <Building2 className="w-5 h-5 text-[#1f1f1f]"/>
           <h3 className="font-semibold text-[#1f1f1f]">Branch Performance</h3>
@@ -144,6 +245,6 @@ export function SettingsPage({ userRole, batchOperationsEnabled, onToggleBatchOp
             </tbody>
           </table>
         </div>
-      </div>)}
+       */}
     </div>);
 }
