@@ -1,6 +1,6 @@
 import { cloneElement, isValidElement, useEffect, useMemo, useState } from 'react';
 import { CreditCard, CheckCircle2, Clock, AlertCircle, Package } from 'lucide-react';
-import { StatsCard } from '../components/common/StatsCard';
+import { StatsCard } from '@/views/components/common/StatsCard';
 
 const OPERATOR_COLUMN_ORDER = ['operator', 'branch', 'simSold', 'revenue', 'actions', 'lastActivity'];
 const COLUMN_ORDER_STORAGE_KEY = 'column-order-dashboard-operator-v1';

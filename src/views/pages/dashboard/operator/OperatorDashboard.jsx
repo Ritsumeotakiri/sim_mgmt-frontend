@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, ChevronLeft, ChevronRight, Clock3, CreditCard, Mail, Phone, Search, ShieldCheck, Smartphone, UserPlus } from 'lucide-react';
-import { SellSIMModal } from '../components/sim/SellSIMModal';
-import { TransactionsTable } from '../components/transaction/TransactionsTable';
-import { PlansManagement } from '../components/plan/PlansManagement';
-import { BackButton } from '../components/common/BackButton';
+import { SellSIMModal } from '@/views/components/sim/SellSIMModal';
+import { TransactionsTable } from '@/views/components/transaction/TransactionsTable';
+import { PlansManagement } from '@/views/components/plan/PlansManagement';
+import { BackButton } from '@/views/components/common/BackButton';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';

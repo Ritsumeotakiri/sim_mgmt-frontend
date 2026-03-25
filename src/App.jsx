@@ -6,11 +6,11 @@ import { useSIMManagement } from '@/viewModels/useSIMManagement';
 import { useUserManagement } from '@/viewModels/useUserManagement';
 import { useMSISDNManagement } from '@/viewModels/useMSISDNManagement';
 
-import { Dashboard } from '@/views/pages/Dashboard';
+import { Dashboard } from '@/views/pages/dashboard/admin/Dashboard';
 import { BranchPerformanceDetail } from '@/views/pages/BranchPerformanceDetail';
 import { LoginPage } from '@/views/pages/LoginPage';
-import { OperatorDashboard } from '@/views/pages/OperatorDashboard';
-import { ManagerDashboard } from '@/views/pages/ManagerDashboard';
+import { OperatorDashboard } from '@/views/pages/dashboard/operator/OperatorDashboard';
+import { ManagerDashboard } from '@/views/pages/dashboard/manager/ManagerDashboard';
 import { SIMTable } from '@/views/components/sim/SIMTable';
 import { MSISDNInventory } from '@/views/components/msisdn/MSISDNInventory';
 import { TransactionsTable } from '@/views/components/transaction/TransactionsTable';
@@ -204,7 +204,7 @@ function App() {
             case 'plans': return { title: 'Plans', subtitle: 'Manage plan catalog and pricing' };
             case 'customers': return { title: 'Customers', subtitle: 'View registered customers' };
             case 'msisdns': return { title: 'MSISDN Inventory', subtitle: 'Manage phone number pool' };
-            case 'transactions': return { title: 'Operations', subtitle: 'View all operations' };
+            case 'transactions': return { title: 'Transactions', subtitle: 'View all SIM transactions' };
             case 'users': return { title: 'User Management', subtitle: 'Manage system users and roles' };
             case 'settings': return { title: 'Settings', subtitle: 'Configure system settings' };
             default: return { title: 'Dashboard', subtitle: '' };
