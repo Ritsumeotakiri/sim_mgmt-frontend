@@ -23,7 +23,6 @@ function mapRole(role) {
 }
 
 const USER_AVATAR_OVERRIDES_KEY = 'sim-user-avatar-overrides';
-const USER_ROLE_OVERRIDES_KEY = 'sim-user-role-overrides';
 
 function readAvatarOverrides() {
     if (typeof window === 'undefined') {
@@ -50,30 +49,7 @@ function writeAvatarOverrides(overrides) {
     }
 }
 
-function readRoleOverrides() {
-    if (typeof window === 'undefined') {
-        return {};
-    }
-    try {
-        const raw = window.localStorage.getItem(USER_ROLE_OVERRIDES_KEY);
-        return raw ? JSON.parse(raw) : {};
-    }
-    catch {
-        return {};
-    }
-}
 
-function writeRoleOverrides(overrides) {
-    if (typeof window === 'undefined') {
-        return;
-    }
-    try {
-        window.localStorage.setItem(USER_ROLE_OVERRIDES_KEY, JSON.stringify(overrides));
-    }
-    catch {
-        // ignore storage errors
-    }
-}
 
 export function setUserRoleOverride(userId, username, role) {
     // role overrides are deprecated; backend role is the single source of truth
@@ -82,16 +58,7 @@ export function setUserRoleOverride(userId, username, role) {
     void role;
 }
 
-function getUserRoleOverride(userId, username) {
-    const overrides = readRoleOverrides();
-    if (userId && overrides[`id:${String(userId)}`]) {
-        return overrides[`id:${String(userId)}`];
-    }
-    if (username && overrides[`name:${String(username).toLowerCase()}`]) {
-        return overrides[`name:${String(username).toLowerCase()}`];
-    }
-    return null;
-}
+
 
 export function setUserAvatarOverride(userId, avatarUrl) {
     if (!userId || !avatarUrl) {

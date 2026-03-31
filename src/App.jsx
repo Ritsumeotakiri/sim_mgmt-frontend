@@ -5,12 +5,11 @@ import { useAuth } from '@/viewModels/useAuth';
 import { useSIMManagement } from '@/viewModels/useSIMManagement';
 import { useUserManagement } from '@/viewModels/useUserManagement';
 import { useMSISDNManagement } from '@/viewModels/useMSISDNManagement';
-
 import { Dashboard } from '@/views/pages/dashboard/admin/Dashboard';
-import { BranchPerformanceDetail } from '@/views/pages/BranchPerformanceDetail';
-import { LoginPage } from '@/views/pages/LoginPage';
-import { OperatorDashboard } from '@/views/pages/dashboard/operator/OperatorDashboard';
+import OperatorDashboard from '@/pages/dashboard/operator/OperatorDashboard';
 import { ManagerDashboard } from '@/views/pages/dashboard/manager/ManagerDashboard';
+import { LoginPage } from '@/views/pages/LoginPage';
+import { BranchPerformanceDetail } from '@/views/pages/BranchPerformanceDetail';
 import { SIMTable } from '@/views/components/sim/SIMTable';
 import { MSISDNInventory } from '@/views/components/msisdn/MSISDNInventory';
 import { TransactionsTable } from '@/views/components/transaction/TransactionsTable';

@@ -12,6 +12,7 @@ export function SIMFormModal({ isOpen, onClose, onSave, sim }) {
     });
     useEffect(() => {
         if (sim) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData({
                 iccid: sim.iccid,
                 status: sim.status,
