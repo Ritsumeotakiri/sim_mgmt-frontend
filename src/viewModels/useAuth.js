@@ -49,6 +49,7 @@ function getStoredAuth() {
             ? resolveFrontendUserRole({ role: tokenPayload.role, username: tokenPayload.username, user_id: tokenPayload.user_id })
             : parsed.userRole;
         const resolvedBranchId = tokenPayload?.branch_id ?? parsed.userBranchId ?? null;
+        const resolvedUserId = tokenPayload?.user_id ?? parsed.userId ?? null;
 
         return {
             isAuthenticated: true,
@@ -56,6 +57,7 @@ function getStoredAuth() {
             userEmail: parsed.userEmail,
             userName: parsed.userName,
             userBranchId: resolvedBranchId,
+            userId: resolvedUserId,
             token: parsed.token,
         };
     }
@@ -116,12 +118,15 @@ export function useAuth() {
             const resolvedRole = resolveFrontendUserRole(loginResult.user);
             const userName = userNames[resolvedRole];
             resetAuthExpiredState();
+            // Use loginResult.user.id (string) as userId, fallback to user_id if needed
+            const userId = loginResult.user?.id ?? loginResult.user?.user_id ?? null;
             setAuth({
                 isAuthenticated: true,
                 userRole: resolvedRole,
                 userEmail: identifier,
                 userName,
                 userBranchId: loginResult.user?.branch_id ?? null,
+                userId,
                 token: loginResult.token,
             });
             window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
@@ -130,6 +135,7 @@ export function useAuth() {
                 userEmail: identifier,
                 userName,
                 userBranchId: loginResult.user?.branch_id ?? null,
+                userId,
                 token: loginResult.token,
             }));
             toast.success(`Welcome, ${userName}!`);

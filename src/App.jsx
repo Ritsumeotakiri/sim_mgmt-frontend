@@ -6,7 +6,7 @@ import { useSIMManagement } from '@/viewModels/useSIMManagement';
 import { useUserManagement } from '@/viewModels/useUserManagement';
 import { useMSISDNManagement } from '@/viewModels/useMSISDNManagement';
 import { Dashboard } from '@/views/pages/dashboard/admin/Dashboard';
-import OperatorDashboard from '@/pages/dashboard/operator/OperatorDashboard';
+import { OperatorDashboard } from '@/views/pages/dashboard/operator/OperatorDashboard';
 import { ManagerDashboard } from '@/views/pages/dashboard/manager/ManagerDashboard';
 import { LoginPage } from '@/views/pages/LoginPage';
 import { BranchPerformanceDetail } from '@/views/pages/BranchPerformanceDetail';
@@ -231,8 +231,23 @@ function App() {
     // ========== Render Dashboard by Role ==========
     const renderDashboard = () => {
         switch (userRole) {
-            case 'operator':
-                return (<OperatorDashboard sims={simManagement.sims} msisdns={simManagement.msisdns} customers={simManagement.customers} plans={simManagement.plans} transactions={simManagement.transactions} stats={simManagement.stats} operatorPerformance={simManagement.operatorPerformance} currentUserIdentifier={auth.userEmail || ''} onSellSIM={simManagement.completeSale} onAddCustomer={simManagement.handleAddCustomer}/>);
+                        case 'operator':
+                                return (
+                                    <OperatorDashboard
+                                        sims={simManagement.sims}
+                                        msisdns={simManagement.msisdns}
+                                        customers={simManagement.customers}
+                                        plans={simManagement.plans}
+                                        transactions={simManagement.transactions}
+                                        stats={simManagement.stats}
+                                        operatorPerformance={simManagement.operatorPerformance}
+                                        currentUserIdentifier={auth.userEmail || ''}
+                                        onSellSIM={simManagement.completeSale}
+                                        onAddCustomer={simManagement.handleAddCustomer}
+                                        userId={auth.userId}
+                                        branchId={auth.userBranchId}
+                                    />
+                                );
             case 'manager':
                 return (<ManagerDashboard sims={simManagement.sims} msisdns={simManagement.msisdns} transactions={simManagement.transactions} users={userManagement.users} totalUsers={userManagement.totalUsers} currentUserBranchId={auth.userBranchId} stats={simManagement.stats} onAddSIM={simManagement.handleAddSIM} onEditSIM={simManagement.handleEditSIM} onBatchImportSIM={simManagement.handleImportSIMBatch}/>);
             case 'admin':

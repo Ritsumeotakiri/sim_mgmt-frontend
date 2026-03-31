@@ -8,7 +8,7 @@ const menuItems = [
     { id: 'msisdns', label: 'MSISDNs', icon: Phone, roles: ['admin', 'manager'] },
     { id: 'transactions', label: 'Transactions', icon: History, roles: ['admin', 'manager', 'operator', 'viewer'] },
     { id: 'users', label: 'Users', icon: Users, roles: ['admin', 'manager'] },
-    { id: 'profile', label: 'Profile', icon: User, roles: ['admin', 'manager', 'operator', 'viewer'] },
+    { id: 'profile', label: 'Profile', icon: User, roles: ['admin'] },
     { id: 'settings', label: 'Settings', icon: Settings, roles: ['admin'] },
 ];
 export function Sidebar({ currentView, onViewChange, userRole, userName, onLogout, collapsed, onToggleCollapsed }) {

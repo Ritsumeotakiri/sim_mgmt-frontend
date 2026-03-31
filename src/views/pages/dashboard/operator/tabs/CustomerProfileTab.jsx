@@ -1,22 +1,24 @@
-import React from 'react';
-import { Mail, Phone, ShieldCheck, Smartphone, CreditCard, Activity, Clock3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Phone, ShieldCheck, Smartphone, CreditCard, Activity, Clock3, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/views/components/common/BackButton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import { formatDateTime } from '../utils/dateUtils';
 import { CUSTOMER_SIMS_PAGE_SIZE, TIMELINE_PAGE_SIZE } from '../utils/constants';
+import { addBalanceToSim } from '@/services/backendApi/sim'; 
 
 export const CustomerProfileTab = ({
   selectedCustomerInsight,
-//   selectedCustomerSims,
   paginatedCustomerSims,
   paginatedTimeline,
   selectedCustomerTimeline,
-//   customerSimsPage,
   setCustomerSimsPage,
   customerSimsTotalPages,
   safeCustomerSimsPage,
-//   timelinePage,
   setTimelinePage,
   timelineTotalPages,
   safeTimelinePage,
@@ -25,7 +27,14 @@ export const CustomerProfileTab = ({
   setActiveTab,
   setSellingSIM,
   setIsSellModalOpen,
+  userId, // Add userId prop
+  branchId, // Add branchId prop
 }) => {
+  const [isAddBalanceOpen, setIsAddBalanceOpen] = useState(false);
+  const [selectedSimForBalance, setSelectedSimForBalance] = useState(null);
+  const [balanceAmount, setBalanceAmount] = useState('');
+  const [isAddingBalance, setIsAddingBalance] = useState(false);
+
   if (!selectedCustomerInsight) {
     return (
       <div className="border border-[#f3f3f3] rounded-xl bg-white p-6 text-sm text-[#828282] text-center">
@@ -35,6 +44,56 @@ export const CustomerProfileTab = ({
   }
 
   const { customer, customerTransactions, activeSims, customerSims } = selectedCustomerInsight;
+
+  const handleAddBalance = async () => {
+    if (!selectedSimForBalance || !balanceAmount) {
+      toast.error('Please enter an amount');
+      return;
+    }
+
+    const amount = parseFloat(balanceAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount greater than 0');
+      return;
+    }
+
+    try {
+      setIsAddingBalance(true);
+      
+      await addBalanceToSim({
+        userId: userId,
+        branchId: branchId,
+        customerId: customer.id,
+        simId: selectedSimForBalance.id,
+        amount: amount,
+      });
+
+      toast.success(`Successfully added $${amount.toFixed(2)} to SIM ${selectedSimForBalance.msisdn || selectedSimForBalance.id}`);
+      setIsAddBalanceOpen(false);
+      setSelectedSimForBalance(null);
+      setBalanceAmount('');
+      
+      // Refresh customer/transaction data to update timeline and SIM profile
+      if (typeof refreshData === 'function' && selectedSimForBalance) {
+        // eslint-disable-next-line no-undef
+        await refreshData(selectedSimForBalance.id);
+      }
+      
+    } catch (error) {
+      console.error('Failed to add balance:', error);
+      toast.error(error.message || 'Failed to add balance. Please try again.');
+    } finally {
+      setIsAddingBalance(false);
+    }
+  };
+
+  const openAddBalanceModal = (sim, event) => {
+    event.stopPropagation(); // Prevent opening SIM profile when clicking the button
+    setSelectedSimForBalance(sim);
+    setIsAddBalanceOpen(true);
+  };
+
+  console.log('userId:', userId, 'branchId:', branchId);
 
   return (
     <div className="space-y-5">
@@ -48,9 +107,11 @@ export const CustomerProfileTab = ({
           <div className="relative px-5 pb-5 sm:px-6 sm:pb-6">
             <div className="-mt-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex items-start gap-4">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-white text-2xl font-semibold text-[#1f1f1f] shadow-sm">
-                  {String(customer.name || '?').charAt(0).toUpperCase()}
-                </div>
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(customer.name || customer.id || 'customer')}`}
+                  alt={customer.name || 'Customer'}
+                  className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white bg-white shadow-sm object-cover"
+                />
                 <div className="space-y-3 pt-10 sm:pt-9">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#828282]">Customer Profile</p>
@@ -73,20 +134,22 @@ export const CustomerProfileTab = ({
                 </div>
               </div>
 
-              <Button 
-                size="sm" 
-                className="h-10 rounded-xl px-4 bg-[#3ebb7f] hover:bg-[#3ebb7f]/90 text-white shadow-sm lg:self-center" 
-                onClick={() => {
-                  setSellingSIM({
-                    customerBuyFlow: true,
-                    lockedCustomer: customer,
-                  });
-                  setIsSellModalOpen(true);
-                }}
-              >
-                <Smartphone className="mr-2 h-4 w-4"/>
-                Buy SIM
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  className="h-10 rounded-xl px-4 bg-[#3ebb7f] hover:bg-[#3ebb7f]/90 text-white shadow-sm lg:self-center" 
+                  onClick={() => {
+                    setSellingSIM({
+                      customerBuyFlow: true,
+                      lockedCustomer: customer,
+                    });
+                    setIsSellModalOpen(true);
+                  }}
+                >
+                  <Smartphone className="mr-2 h-4 w-4"/>
+                  Buy SIM
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -139,34 +202,44 @@ export const CustomerProfileTab = ({
                   const planName = plans.find((plan) => plan.id === sim.planId)?.name || (sim.planId ? `Plan #${sim.planId}` : 'No plan');
                   const isActive = sim.status === 'active';
                   return (
-                    <button 
+                    <div 
                       key={sim.id} 
-                      type="button" 
-                      onClick={() => {
-                        setSelectedCustomerSim(sim);
-                        setActiveTab('sim-profile');
-                      }} 
-                      className="w-full rounded-2xl border border-[#ededed] bg-gradient-to-br from-white to-[#fafafa] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[#d8d8d8] hover:shadow-md"
+                      className="w-full rounded-2xl border border-[#ededed] bg-gradient-to-br from-white to-[#fafafa] p-4 transition-all hover:-translate-y-0.5 hover:border-[#d8d8d8] hover:shadow-md"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-base font-semibold text-[#1f1f1f]">{sim.msisdn || 'No MSISDN'}</p>
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${isActive ? 'bg-[#3ebb7f]/10 text-[#2f9f67]' : 'bg-[#f3f3f3] text-[#6f6f6f]'}`}>
-                              {sim.status || 'unknown'}
-                            </span>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setSelectedCustomerSim(sim);
+                            setActiveTab('sim-profile');
+                          }} 
+                          className="flex-1 text-left"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-base font-semibold text-[#1f1f1f]">{sim.msisdn || 'No MSISDN'}</p>
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${isActive ? 'bg-[#3ebb7f]/10 text-[#2f9f67]' : 'bg-[#f3f3f3] text-[#6f6f6f]'}`}>
+                                {sim.status || 'unknown'}
+                              </span>
+                            </div>
+                            <div className="grid gap-1 text-sm text-[#6f6f6f] sm:grid-cols-2">
+                              <p>SIM #{sim.id}</p>
+                              <p className="truncate">ICCID: {sim.iccid || 'N/A'}</p>
+                              <p className="truncate sm:col-span-2">Plan: {planName}</p>
+                            </div>
                           </div>
-                          <div className="grid gap-1 text-sm text-[#6f6f6f] sm:grid-cols-2">
-                            <p>SIM #{sim.id}</p>
-                            <p className="truncate">ICCID: {sim.iccid || 'N/A'}</p>
-                            <p className="truncate sm:col-span-2">Plan: {planName}</p>
-                          </div>
-                        </div>
-                        <div className="rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-medium text-[#5f5f5f]">
-                          View
-                        </div>
+                        </button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => openAddBalanceModal(sim, e)}
+                          className="h-8 px-3 bg-[#5b93ff] hover:bg-[#5b93ff]/90 text-white border-none"
+                        >
+                          <PlusCircle className="h-4 w-4 mr-1" />
+                          Add Balance
+                        </Button>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
                 {customerSims.length > CUSTOMER_SIMS_PAGE_SIZE && (
@@ -206,7 +279,23 @@ export const CustomerProfileTab = ({
                       {index < paginatedTimeline.length - 1 && <div className="mt-2 h-8 w-px bg-[#e8e8e8]" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[#1f1f1f]">{entry.label}</p>
+                      {(() => {
+                        // Try to extract status from label (e.g., 'Top Up to ... (completed)')
+                        const match = entry.label.match(/^(.*) \(([^)]+)\)$/);
+                        if (match) {
+                          const main = match[1];
+                          const status = match[2];
+                          let badgeColor = 'bg-[#e0e7ff] text-[#3730a3]';
+                          if (status.toLowerCase() === 'completed' || status.toLowerCase() === 'complete') badgeColor = 'bg-[#d1fae5] text-[#065f46]';
+                          else if (status.toLowerCase() === 'pending') badgeColor = 'bg-[#fef3c7] text-[#92400e]';
+                          else if (status.toLowerCase() === 'failed' || status.toLowerCase() === 'error') badgeColor = 'bg-[#fee2e2] text-[#991b1b]';
+                          return <>
+                            <p className="text-sm font-medium text-[#1f1f1f]">{main}</p>
+                            <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold align-middle ${badgeColor}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                          </>;
+                        }
+                        return <p className="text-sm font-medium text-[#1f1f1f]">{entry.label}</p>;
+                      })()}
                       <p className="mt-1 text-xs text-[#828282]">{formatDateTime(entry.date)}</p>
                     </div>
                   </div>
@@ -229,6 +318,45 @@ export const CustomerProfileTab = ({
           </div>
         </div>
       </div>
+
+      {/* Add Balance Modal */}
+      <Dialog open={isAddBalanceOpen} onOpenChange={setIsAddBalanceOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Balance to SIM</DialogTitle>
+            <DialogDescription>
+              Add balance to SIM: {selectedSimForBalance?.msisdn || selectedSimForBalance?.id}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount (USD)</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="Enter amount"
+                value={balanceAmount}
+                onChange={(e) => setBalanceAmount(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddBalanceOpen(false)} disabled={isAddingBalance}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddBalance} 
+                className="bg-[#5b93ff] hover:bg-[#5b93ff]/90"
+                disabled={isAddingBalance || !balanceAmount}
+              >
+                {isAddingBalance ? 'Processing...' : 'Add Balance'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

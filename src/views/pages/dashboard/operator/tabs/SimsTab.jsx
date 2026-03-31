@@ -21,8 +21,7 @@ export const SimsTab = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-[#1f1f1f]">Number Pool (Sell by Number)</h3>
-          <p className="text-sm text-[#828282]">Pick a number first, then choose ICCID in the sale popup.</p>
+          <h3 className="text-base font-semibold text-[#1f1f1f]">Number Pool Sell by Number</h3>
         </div>
         <div className="w-full max-w-sm">
           <Input 

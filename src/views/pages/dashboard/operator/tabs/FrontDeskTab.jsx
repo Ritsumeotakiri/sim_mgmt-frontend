@@ -26,32 +26,58 @@ export const FrontDeskTab = ({
     safeFrontDeskPage * FRONTDESK_PAGE_SIZE
   );
 
+  // Calculate summary stats
+  const totalCustomers = filteredCustomerInsights.length;
+  const totalSIMs = filteredCustomerInsights.reduce((sum, c) => sum + (c.customerSims?.length || 0), 0);
+  const totalActiveSIMs = filteredCustomerInsights.reduce((sum, c) => sum + (c.activeSims?.length || 0), 0);
+  const totalTransactions = filteredCustomerInsights.reduce((sum, c) => sum + (c.customerTransactions?.length || 0), 0);
+
+  
   return (
     <div className="space-y-5">
+      {/* Summary header */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+        <div className="rounded-xl border border-[#ececec] bg-white p-4 shadow-sm text-center">
+          <div className="text-xs font-medium uppercase tracking-[0.12em] text-[#828282]">Customers</div>
+          <div className="mt-1 text-2xl font-semibold text-[#1f1f1f]">{totalCustomers}</div>
+        </div>
+        <div className="rounded-xl border border-[#ececec] bg-white p-4 shadow-sm text-center">
+          <div className="text-xs font-medium uppercase tracking-[0.12em] text-[#828282]">Total SIMs</div>
+          <div className="mt-1 text-2xl font-semibold text-[#1f1f1f]">{totalSIMs}</div>
+        </div>
+        <div className="rounded-xl border border-[#ececec] bg-white p-4 shadow-sm text-center">
+          <div className="text-xs font-medium uppercase tracking-[0.12em] text-[#828282]">Active SIMs</div>
+          <div className="mt-1 text-2xl font-semibold text-[#1f1f1f]">{totalActiveSIMs}</div>
+        </div>
+        <div className="rounded-xl border border-[#ececec] bg-white p-4 shadow-sm text-center">
+          <div className="text-xs font-medium uppercase tracking-[0.12em] text-[#828282]">Transactions</div>
+          <div className="mt-1 text-2xl font-semibold text-[#1f1f1f]">{totalTransactions}</div>
+        </div>
+      </div>
       <div className="bg-[#f9f9f9] rounded-xl border border-[#f3f3f3] p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-          <div className="relative lg:col-span-3">
-            <Search className="w-4 h-4 text-[#828282] absolute left-3 top-1/2 -translate-y-1/2"/>
-            <Input 
-              value={frontDeskSearch} 
-              onChange={(event) => setFrontDeskSearch(event.target.value)} 
-              placeholder="Search by name, phone, email, ID number" 
-              className="pl-9"
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 text-[#828282] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"/>
+            <Input
+              value={frontDeskSearch}
+              onChange={(event) => setFrontDeskSearch(event.target.value)}
+              placeholder="Search by name, phone, email, ID number"
+              className="pl-9 h-9 text-sm"
+              style={{ minWidth: 0 }}
             />
           </div>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="justify-between w-auto min-w-[120px] h-8 px-3 text-xs justify-self-end">
+              <Button variant="outline" size="sm" className="h-9 px-3 text-xs min-w-[100px]">
                 {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel className="text-xs">Activity</DropdownMenuLabel>
-              <DropdownMenuCheckboxItem 
-                className="text-xs" 
-                checked={frontDeskFilters.withTransactions} 
-                onSelect={(event) => event.preventDefault()} 
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                checked={frontDeskFilters.withTransactions}
+                onSelect={(event) => event.preventDefault()}
                 onCheckedChange={() => toggleFrontDeskFilter('withTransactions')}
               >
                 <div className="flex items-center gap-2">
@@ -59,10 +85,10 @@ export const FrontDeskTab = ({
                   <span>With transactions</span>
                 </div>
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem 
-                className="text-xs" 
-                checked={frontDeskFilters.noTransactions} 
-                onSelect={(event) => event.preventDefault()} 
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                checked={frontDeskFilters.noTransactions}
+                onSelect={(event) => event.preventDefault()}
                 onCheckedChange={() => toggleFrontDeskFilter('noTransactions')}
               >
                 <div className="flex items-center gap-2">
@@ -70,13 +96,12 @@ export const FrontDeskTab = ({
                   <span>No transactions</span>
                 </div>
               </DropdownMenuCheckboxItem>
-
-              <DropdownMenuSeparator/>
+              <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-xs">SIM state</DropdownMenuLabel>
-              <DropdownMenuCheckboxItem 
-                className="text-xs" 
-                checked={frontDeskFilters.withActiveSim} 
-                onSelect={(event) => event.preventDefault()} 
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                checked={frontDeskFilters.withActiveSim}
+                onSelect={(event) => event.preventDefault()}
                 onCheckedChange={() => toggleFrontDeskFilter('withActiveSim')}
               >
                 <div className="flex items-center gap-2">
@@ -84,10 +109,10 @@ export const FrontDeskTab = ({
                   <span>With active SIM</span>
                 </div>
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem 
-                className="text-xs" 
-                checked={frontDeskFilters.noActiveSim} 
-                onSelect={(event) => event.preventDefault()} 
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                checked={frontDeskFilters.noActiveSim}
+                onSelect={(event) => event.preventDefault()}
                 onCheckedChange={() => toggleFrontDeskFilter('noActiveSim')}
               >
                 <div className="flex items-center gap-2">
@@ -97,13 +122,9 @@ export const FrontDeskTab = ({
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
-          <p className="text-sm text-[#828282]">{filteredCustomerInsights.length} customer(s) found</p>
           {canAddCustomer && (
-            <Button onClick={() => setIsAddCustomerOpen(true)} className="bg-[#1f1f1f] hover:bg-[#1f1f1f]/90">
-              <UserPlus className="w-4 h-4 mr-2"/>
+            <Button onClick={() => setIsAddCustomerOpen(true)} className="bg-[#1f1f1f] hover:bg-[#1f1f1f]/90 h-9 px-4 text-sm flex-shrink-0">
+              <UserPlus className="w-4 h-4 mr-2" />
               Register New Customer
             </Button>
           )}

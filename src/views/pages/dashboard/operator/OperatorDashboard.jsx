@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from 'react';
 import { SellSIMModal } from '@/views/components/sim/SellSIMModal';
@@ -22,7 +23,17 @@ import {
 } from './utils/constants';
 import { normalizeSearchValue, computeBestMatchScore } from './utils/searchUtils';
 
-export function OperatorDashboard({ sims, msisdns, customers, plans, transactions, onSellSIM, onAddCustomer }) {
+export function OperatorDashboard({ 
+  sims, 
+  msisdns, 
+  customers, 
+  plans, 
+  transactions, 
+  onSellSIM, 
+  onAddCustomer,
+  userId, // Add userId prop
+  branchId // Add branchId prop
+}) {
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [sellingSIM, setSellingSIM] = useState(null);
   const [activeTab, setActiveTab] = useState('frontdesk');
@@ -40,10 +51,37 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
     noActiveSim: false,
   });
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [localCustomers, setLocalCustomers] = useState(customers);
+  const [localSims, setLocalSims] = useState(sims);
+  const [localTransactions, setLocalTransactions] = useState(transactions);
   const [selectedCustomerSim, setSelectedCustomerSim] = useState(null);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
   const { tabOrder, draggedTab, setDraggedTab, onDropTab } = useTabOrder();
+
+  // Add refreshData function
+  const refreshData = async (simIdToUpdate = null) => {
+    setIsRefreshing(true);
+    try {
+      // Simulate data refresh; replace with real API calls if needed
+      // For now, just use the latest props
+      setLocalCustomers(customers);
+      setLocalSims(sims);
+      setLocalTransactions(transactions);
+      // If a SIM was just updated, update selectedCustomerSim to the latest version
+      if (simIdToUpdate && selectedCustomerSim) {
+        const updatedSim = sims.find(sim => String(sim.id) === String(simIdToUpdate));
+        if (updatedSim) {
+          setSelectedCustomerSim(updatedSim);
+        }
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     setFrontDeskPage(1);
@@ -61,6 +99,18 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
   useEffect(() => {
     setSimTxPage(1);
   }, [selectedCustomerSim]);
+
+  useEffect(() => { 
+    setLocalCustomers(customers); 
+  }, [customers]);
+  
+  useEffect(() => { 
+    setLocalSims(sims); 
+  }, [sims]);
+  
+  useEffect(() => { 
+    setLocalTransactions(transactions); 
+  }, [transactions]);
 
   // Get available MSISDNs
   const availableMSISDNs = useMemo(() => {
@@ -80,9 +130,9 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
 
   const canAddCustomer = typeof onAddCustomer === 'function';
 
-  const customerInsights = useCustomerInsights(customers, sims, transactions);
+  const customerInsights = useCustomerInsights(localCustomers, localSims, localTransactions);
   const filteredCustomerInsights = useFilteredCustomerInsights(customerInsights, frontDeskSearch, frontDeskFilters);
-  const performanceMetrics = usePerformanceMetrics(customers, sims, transactions);
+  const performanceMetrics = usePerformanceMetrics(localCustomers, localSims, localTransactions);
 
   const selectedCustomerInsight = useMemo(() => {
     if (!selectedCustomerId) {
@@ -103,15 +153,34 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
         label: 'Customer registered',
         date: customer.createdAt,
       },
-      ...customerTransactions.map((transaction) => ({
-        id: `tx-${transaction.id}`,
-        label: `${String(transaction.type || 'transaction').replace(/_/g, ' ')} (${transaction.status})`,
-        date: transaction.date,
-      })),
+      ...customerTransactions.map((transaction) => {
+        let label = `${String(transaction.type || 'transaction').replace(/_/g, ' ')} (${transaction.status})`;
+        // Add more detail for top up
+        if (String(transaction.type).toLowerCase() === 'top_up') {
+          // Try to show phone number and amount if available
+          let simInfo = '';
+          if (transaction.simId) {
+            const sim = sims.find(s => String(s.id) === String(transaction.simId));
+            if (sim && sim.msisdn) {
+              simInfo = ` to ${sim.msisdn}`;
+            }
+          }
+          let amountInfo = '';
+          if (transaction.amount) {
+            amountInfo = `, Amount: $${Number(transaction.amount).toFixed(2)}`;
+          }
+          label = `Top Up${simInfo}${amountInfo} (${transaction.status})`;
+        }
+        return {
+          id: `tx-${transaction.id}`,
+          label,
+          date: transaction.date,
+        };
+      }),
     ]
       .filter((entry) => Boolean(entry.date))
       .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime());
-  }, [selectedCustomerInsight]);
+  }, [selectedCustomerInsight, sims]);
 
   const activeFilterCount = Object.values(frontDeskFilters).filter(Boolean).length;
 
@@ -150,32 +219,27 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
       return [];
     }
 
-    return transactions
+    return localTransactions
       .filter((transaction) => transaction.simId === selectedCustomerSim.id || transaction.iccid === selectedCustomerSim.iccid)
       .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime());
-  }, [selectedCustomerSim, transactions]);
+  }, [selectedCustomerSim, localTransactions]);
 
   // Pagination calculations
   const frontDeskTotalPages = Math.max(1, Math.ceil(filteredCustomerInsights.length / FRONTDESK_PAGE_SIZE));
   const safeFrontDeskPage = Math.min(frontDeskPage, frontDeskTotalPages);
-  // Remove unused variable paginatedFrontDeskCustomers
-
+  
   const numberPoolTotalPages = Math.max(1, Math.ceil(sellableNumberPool.length / NUMBER_POOL_PAGE_SIZE));
   const safeNumberPoolPage = Math.min(numberPoolPage, numberPoolTotalPages);
-  // Remove unused variable paginatedNumberPool
-
+  
   const selectedCustomerSims = selectedCustomerInsight?.customerSims || [];
   const customerSimsTotalPages = Math.max(1, Math.ceil(selectedCustomerSims.length / CUSTOMER_SIMS_PAGE_SIZE));
   const safeCustomerSimsPage = Math.min(customerSimsPage, customerSimsTotalPages);
-  // Remove unused variable paginatedCustomerSims
-
+  
   const timelineTotalPages = Math.max(1, Math.ceil(selectedCustomerTimeline.length / TIMELINE_PAGE_SIZE));
   const safeTimelinePage = Math.min(timelinePage, timelineTotalPages);
-  // Remove unused variable paginatedTimeline
-
+  
   const simTxTotalPages = Math.max(1, Math.ceil(selectedSimTransactions.length / SIM_TX_PAGE_SIZE));
   const safeSimTxPage = Math.min(simTxPage, simTxTotalPages);
-  // Remove unused variable paginatedSimTransactions
 
   return (
     <div className="space-y-6">
@@ -235,6 +299,9 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
               setActiveTab={setActiveTab}
               setSellingSIM={setSellingSIM}
               setIsSellModalOpen={setIsSellModalOpen}
+              userId={userId}
+              branchId={branchId}
+              refreshData={refreshData}
             />
           )}
 
@@ -261,7 +328,6 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
               sellableNumberPool={sellableNumberPool}
               numberPoolSearch={numberPoolSearch}
               setNumberPoolSearch={setNumberPoolSearch}
-              numberPoolPage={numberPoolPage}
               setNumberPoolPage={setNumberPoolPage}
               numberPoolTotalPages={numberPoolTotalPages}
               safeNumberPoolPage={safeNumberPoolPage}
@@ -301,7 +367,7 @@ export function OperatorDashboard({ sims, msisdns, customers, plans, transaction
         lockedCustomer={sellingSIM?.lockedCustomer || null}
         availableSIMs={inactiveSIMs}
         availableMSISDNs={availableMSISDNs}
-        customers={customers}
+        customers={localCustomers}
         plans={plans}
       />
 

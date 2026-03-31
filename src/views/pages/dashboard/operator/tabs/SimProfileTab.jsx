@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { addBalanceToSim } from '@/services/backendApi/sim';
 import { BackButton } from '@/views/components/common/BackButton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDateTime } from '../utils/dateUtils';
@@ -11,12 +16,55 @@ export const SimProfileTab = ({
   plans,
   selectedSimTransactions,
   paginatedSimTransactions,
-//   simTxPage,
   setSimTxPage,
   simTxTotalPages,
   safeSimTxPage,
-  setActiveTab,
+  setActiveTab, 
 }) => {
+  // Modal state for Top Up
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState('');
+  const [isToppingUp, setIsToppingUp] = useState(false);
+
+  // Optionally, you can get userId, branchId, customerId from selectedCustomerInsight or props
+  const userId = selectedCustomerInsight?.userId || selectedCustomerSim?.userId;
+  const branchId = selectedCustomerInsight?.branchId || selectedCustomerSim?.branchId;
+  const customerId = selectedCustomerInsight?.customer?.id || selectedCustomerSim?.customerId;
+
+  const handleTopUp = async () => {
+    if (!selectedCustomerSim || !topUpAmount) {
+      toast.error('Please enter an amount');
+      return;
+    }
+    const amount = parseFloat(topUpAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount greater than 0');
+      return;
+    }
+    try {
+      setIsToppingUp(true);
+      await addBalanceToSim({
+        userId,
+        branchId,
+        customerId,
+        simId: selectedCustomerSim.id,
+        amount,
+      });
+      toast.success(`Successfully topped up $${amount.toFixed(2)} to SIM ${selectedCustomerSim.msisdn || selectedCustomerSim.id}`);
+      setIsTopUpOpen(false);
+      setTopUpAmount('');
+      // Optionally refresh transactions here (if you have a refresh function)
+      if (typeof window !== 'undefined' && typeof window.location !== 'undefined') {
+        window.location.reload(); // fallback: reload page to refresh data
+      }
+    } catch (error) {
+      console.error('Failed to top up:', error);
+      toast.error(error.message || 'Failed to top up. Please try again.');
+    } finally {
+      setIsToppingUp(false);
+    }
+  };
+
   if (!selectedCustomerSim) {
     return (
       <div className="border border-[#f3f3f3] rounded-xl bg-white p-6 text-sm text-[#828282] text-center">
@@ -27,14 +75,62 @@ export const SimProfileTab = ({
 
   return (
     <div className="space-y-5">
+
       <div className="flex items-center justify-between">
         <BackButton onClick={() => setActiveTab('customer-profile')} label="Back to Customer"/>
       </div>
 
       <div className="border border-[#f3f3f3] rounded-xl bg-white p-4 space-y-4">
-        <div>
-          <h3 className="text-base font-semibold text-[#1f1f1f]">{selectedCustomerSim.msisdn || 'No MSISDN'} • SIM #{selectedCustomerSim.id}</h3>
-          <p className="text-sm text-[#828282]">ICCID: {selectedCustomerSim.iccid || 'N/A'}</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-[#1f1f1f]">{selectedCustomerSim.msisdn || 'No MSISDN'} • SIM #{selectedCustomerSim.id}</h3>
+            <p className="text-sm text-[#828282]">ICCID: {selectedCustomerSim.iccid || 'N/A'}</p>
+          </div>
+          <Button
+            size="sm"
+            className="h-8 px-4 bg-[#5b93ff] hover:bg-[#5b93ff]/90 text-white whitespace-nowrap"
+            onClick={() => setIsTopUpOpen(true)}
+          >
+            Top Up
+          </Button>
+              {/* Top Up Modal */}
+              <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Top Up SIM</DialogTitle>
+                    <DialogDescription>
+                      Add balance to SIM: {selectedCustomerSim?.msisdn || selectedCustomerSim?.id}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="topup-amount">Amount (USD)</Label>
+                      <Input
+                        id="topup-amount"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="Enter amount"
+                        value={topUpAmount}
+                        onChange={(e) => setTopUpAmount(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsTopUpOpen(false)} disabled={isToppingUp}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleTopUp}
+                        className="bg-[#5b93ff] hover:bg-[#5b93ff]/90"
+                        disabled={isToppingUp || !topUpAmount}
+                      >
+                        {isToppingUp ? 'Processing...' : 'Top Up'}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
