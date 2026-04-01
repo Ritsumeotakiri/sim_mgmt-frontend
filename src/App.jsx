@@ -1,26 +1,27 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Toaster } from '@/components/ui/sonner';
-import { useAuth } from '@/viewModels/useAuth';
-import { useSIMManagement } from '@/viewModels/useSIMManagement';
-import { useUserManagement } from '@/viewModels/useUserManagement';
-import { useMSISDNManagement } from '@/viewModels/useMSISDNManagement';
-import { Dashboard } from '@/views/pages/dashboard/admin/Dashboard';
-import { OperatorDashboard } from '@/views/pages/dashboard/operator/OperatorDashboard';
-import { ManagerDashboard } from '@/views/pages/dashboard/manager/ManagerDashboard';
-import { LoginPage } from '@/views/pages/LoginPage';
-import { BranchPerformanceDetail } from '@/views/pages/BranchPerformanceDetail';
-import { SIMTable } from '@/views/components/sim/SIMTable';
-import { MSISDNInventory } from '@/views/components/msisdn/MSISDNInventory';
-import { TransactionsTable } from '@/views/components/transaction/TransactionsTable';
-import { CustomersTable } from '@/views/components/customer/CustomersTable';
-import { PlansManagement } from '@/views/components/plan/PlansManagement';
-import { UserManagement } from '@/views/components/user/UserManagement';
-import { SIMFormModal } from '@/views/components/sim/SIMFormModal';
-import { SellSIMModal } from '@/views/components/sim/SellSIMModal';
-import { ProfilePage } from '@/views/pages/ProfilePage';
-import { SettingsPage } from '@/views/pages/SettingsPage';
-import { MainLayout } from '@/views/layouts/MainLayout';
+import { Toaster } from '@/presentation/components/ui/sonner';
+import { useAuth } from '@/presentation/viewModels/app/useAuthViewModel';
+import { useSIMManagementViewModel } from '@/presentation/viewModels/app/useSIMManagementViewModel';
+import { useUserManagementViewModel } from '@/presentation/viewModels/app/useUserManagementViewModel';
+import { useMSISDNManagement } from '@/presentation/viewModels/app/useMSISDNManagementViewModel';
+import { LoginPageView as LoginPage } from '@/presentation/views/auth/LoginPageView';
+const lazyNamed = (loader, exportName) => lazy(() => loader().then((module) => ({ default: module[exportName] })));
+const Dashboard = lazyNamed(() => import('@/presentation/views/dashboard/admin/DashboardView'), 'DashboardView');
+const OperatorDashboard = lazyNamed(() => import('@/presentation/views/operator/OperatorDashboardView'), 'OperatorDashboardView');
+const ManagerDashboard = lazyNamed(() => import('@/presentation/views/dashboard/manager/ManagerDashboardView'), 'ManagerDashboardView');
+const BranchPerformanceDetail = lazyNamed(() => import('@/presentation/views/branch/BranchPerformanceDetailView'), 'BranchPerformanceDetailView');
+const SIMTable = lazyNamed(() => import('@/presentation/views/components/sim/SIMTable'), 'SIMTable');
+const MSISDNInventory = lazyNamed(() => import('@/presentation/views/components/msisdn/MSISDNInventory'), 'MSISDNInventory');
+const TransactionsTable = lazyNamed(() => import('@/presentation/views/components/transaction/TransactionsTable'), 'TransactionsTable');
+const CustomersTable = lazyNamed(() => import('@/presentation/views/components/customer/CustomersTable'), 'CustomersTable');
+const PlansManagement = lazyNamed(() => import('@/presentation/views/components/plan/PlansManagement'), 'PlansManagement');
+const UserManagement = lazyNamed(() => import('@/presentation/views/components/user/UserManagement'), 'UserManagement');
+const SIMFormModal = lazyNamed(() => import('@/presentation/views/components/sim/SIMFormModal'), 'SIMFormModal');
+const SellSIMModal = lazyNamed(() => import('@/presentation/views/components/sim/SellSIMModal'), 'SellSIMModal');
+const ProfilePage = lazyNamed(() => import('@/presentation/views/user/ProfilePageView'), 'ProfilePageView');
+const SettingsPage = lazyNamed(() => import('@/presentation/views/settings/SettingsPageView'), 'SettingsPageView');
+const MainLayout = lazyNamed(() => import('@/presentation/views/layout/MainLayoutView'), 'MainLayoutView');
 
 const VIEW_TO_PATH = {
     dashboard: '/dashboard',
@@ -44,14 +45,14 @@ function App() {
     const { auth, handleLogin, handleLogout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const simManagement = useSIMManagement({
+    const simManagement = useSIMManagementViewModel({
         userName: auth.userName,
         isAuthenticated: auth.isAuthenticated,
         authToken: auth.token,
         userRole: auth.userRole,
         userBranchId: auth.userBranchId,
     });
-    const userManagement = useUserManagement({
+    const userManagement = useUserManagementViewModel({
         isAuthenticated: auth.isAuthenticated,
         authToken: auth.token,
     });
@@ -261,17 +262,41 @@ function App() {
         switch (currentView) {
             case 'dashboard':
                 if (userRole === 'admin' && branchDetailNameFromPath) {
-                    return (<BranchPerformanceDetail branchName={branchDetailNameFromPath} operatorPerformance={simManagement.operatorPerformance} users={userManagement.users} onBack={() => navigate('/dashboard')} onOpenUserManagement={() => navigateToView('users')} onOpenSIMManagement={() => navigateToView('sims')} onOpenTransactionsManagement={() => navigateToView('transactions')}/>);
+                    return (<BranchPerformanceDetail branchName={branchDetailNameFromPath} operatorPerformance={simManagement.operatorPerformance} users={userManagement.users} transactions={simManagement.transactions} onBack={() => navigate('/dashboard')} onOpenUserManagement={() => navigateToView('users')} onOpenSIMManagement={() => navigateToView('sims')} onOpenTransactionsManagement={() => navigateToView('transactions')}/>);
                 }
                 return renderDashboard();
             case 'sims':
-                return (<SIMTable sims={simManagement.sims} userRole={userRole} onEdit={userRole === 'viewer' || userRole === 'operator' ? () => { } : simManagement.openEditSIMModal} onDelete={userRole === 'admin' ? simManagement.handleDeleteSIM : () => { }} onAdd={userRole === 'admin' || userRole === 'manager' ? simManagement.openAddSIMModal : () => { }} onSell={userRole === 'admin' || userRole === 'operator' ? simManagement.handleSellSIM : undefined} batchModeEnabled={userRole === 'admin' ? batchOperationsEnabled : false} onBulkUpdateStatus={userRole === 'admin' ? simManagement.handleBulkUpdateSIMStatus : undefined} onBulkUpdateBranch={userRole === 'admin' ? simManagement.handleBulkUpdateSIMBranch : undefined} onBulkDelete={userRole === 'admin' ? simManagement.handleBulkDeleteSIMs : undefined} useServerPagination={true} selectedSimId={simDetailIdFromPath} onOpenSimDetail={(simId) => navigate(`/sims/${simId}`)} onCloseSimDetail={() => navigate('/sims')}/>);
+                return (<SIMTable sims={simManagement.sims} userRole={userRole} userId={auth.userId} branchId={auth.userBranchId} plans={simManagement.plans} onEdit={userRole === 'viewer' || userRole === 'operator' ? () => { } : simManagement.openEditSIMModal} onDelete={userRole === 'admin' ? simManagement.handleDeleteSIM : () => { }} onAdd={userRole === 'admin' || userRole === 'manager' ? simManagement.openAddSIMModal : () => { }} onSell={userRole === 'admin' || userRole === 'operator' ? simManagement.handleSellSIM : undefined} batchModeEnabled={userRole === 'admin' ? batchOperationsEnabled : false} onBulkUpdateStatus={userRole === 'admin' ? simManagement.handleBulkUpdateSIMStatus : undefined} onBulkUpdateBranch={userRole === 'admin' ? simManagement.handleBulkUpdateSIMBranch : undefined} onBulkDelete={userRole === 'admin' ? simManagement.handleBulkDeleteSIMs : undefined} useServerPagination={true} selectedSimId={simDetailIdFromPath} onOpenSimDetail={(simId) => navigate(`/sims/${simId}`)} onCloseSimDetail={() => navigate('/sims')}/>);
             case 'plans':
                 return (<PlansManagement plans={simManagement.plans} canEdit={userRole === 'admin' || userRole === 'manager'} onAdd={userRole === 'admin' || userRole === 'manager' ? simManagement.handleAddPlan : undefined} onEdit={userRole === 'admin' || userRole === 'manager' ? simManagement.handleEditPlan : undefined} onDelete={userRole === 'admin' || userRole === 'manager' ? simManagement.handleDeletePlan : undefined}/>);
             case 'profile':
                 return (<ProfilePage userName={auth.userName} userEmail={auth.userEmail || ''} userRole={userRole}/>);
             case 'msisdns':
-                return (<MSISDNInventory msisdns={simManagement.msisdns} onAdd={userRole === 'admin' ? (data) => msisdnManagement.handleAddMSISDN(data, simManagement.setMsisdns) : undefined} onBatchImport={userRole === 'admin' ? (payload) => msisdnManagement.handleImportMSISDNBatch(payload, simManagement.setMsisdns) : undefined} onEdit={userRole === 'admin' ? (data) => msisdnManagement.handleEditMSISDN(data, simManagement.setMsisdns) : undefined} onDelete={userRole === 'admin' ? (id) => msisdnManagement.handleDeleteMSISDN(id, simManagement.setMsisdns) : undefined} useServerPagination={true}/>);
+                return (<MSISDNInventory msisdns={simManagement.msisdns} onAdd={userRole === 'admin' ? async (data) => {
+                        const success = await msisdnManagement.handleAddMSISDN(data, simManagement.setMsisdns);
+                        if (success) {
+                            simManagement.reloadData();
+                        }
+                        return success;
+                    } : undefined} onBatchImport={userRole === 'admin' ? async (payload) => {
+                        const result = await msisdnManagement.handleImportMSISDNBatch(payload);
+                        if (result) {
+                            simManagement.reloadData();
+                        }
+                        return result;
+                    } : undefined} onEdit={userRole === 'admin' ? async (data) => {
+                        const success = await msisdnManagement.handleEditMSISDN(data, simManagement.setMsisdns);
+                        if (success) {
+                            simManagement.reloadData();
+                        }
+                        return success;
+                    } : undefined} onDelete={userRole === 'admin' ? async (id) => {
+                        const success = await msisdnManagement.handleDeleteMSISDN(id, simManagement.setMsisdns);
+                        if (success) {
+                            simManagement.reloadData();
+                        }
+                        return success;
+                    } : undefined} useServerPagination={true}/>);
             case 'customers':
                 return (<CustomersTable customers={simManagement.customers} transactions={simManagement.transactions} sims={simManagement.sims} plans={simManagement.plans} onAdd={userRole !== 'viewer' ? simManagement.handleAddCustomer : undefined} onEdit={userRole !== 'viewer' ? simManagement.handleEditCustomer : undefined} onDelete={userRole === 'admin' || userRole === 'manager' ? simManagement.handleDeleteCustomer : undefined} useServerPagination={true}/>);
             case 'transactions':
@@ -279,7 +304,13 @@ function App() {
             case 'users':
                 return (<UserManagement users={userManagement.users} transactions={simManagement.transactions} onAdd={userRole === 'admin' ? userManagement.handleAddUser : undefined} onEdit={userRole === 'admin' ? userManagement.handleEditUser : undefined} onDelete={userRole === 'admin' ? userManagement.handleDeleteUser : undefined} useServerPagination={true}/>);
             case 'settings':
-                return (<SettingsPage userRole={userRole} batchOperationsEnabled={batchOperationsEnabled} onToggleBatchOperations={handleToggleBatchOperations} onAddBranch={userRole === 'admin' ? userManagement.handleAddBranch : undefined} operatorPerformance={simManagement.operatorPerformance}/>);
+                return (<SettingsPage userRole={userRole} batchOperationsEnabled={batchOperationsEnabled} onToggleBatchOperations={handleToggleBatchOperations} onAddBranch={userRole === 'admin' ? async (branchData) => {
+                        const success = await userManagement.handleAddBranch(branchData);
+                        if (success) {
+                            simManagement.reloadData();
+                        }
+                        return success;
+                    } : undefined} operatorPerformance={simManagement.operatorPerformance}/>);
             default:
                 return renderDashboard();
         }
@@ -300,12 +331,16 @@ function App() {
                                 }} onSell={simManagement.completeSale} sim={simManagement.sellingSIM} availableMSISDNs={simManagement.availableMSISDNs} customers={simManagement.customers} plans={simManagement.plans}/>)}
             </>);
 
+        const loadingFallback = <div className="p-6 text-sm text-[#828282]">Loading...</div>;
+
         return (<>
             <Toaster position="top-right" richColors/>
             <Routes>
                 <Route path="/login" element={auth.isAuthenticated ? <Navigate to={VIEW_TO_PATH.dashboard} replace/> : <LoginPage onLogin={handleLoginAndResetView}/>}/>
-                <Route path="*" element={auth.isAuthenticated ? appContent : <Navigate to="/login" replace/>}/>
+                <Route path="*" element={auth.isAuthenticated ? <Suspense fallback={loadingFallback}>{appContent}</Suspense> : <Navigate to="/login" replace/>}/>
             </Routes>
         </>);
 }
 export default App;
+
+

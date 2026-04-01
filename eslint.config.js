@@ -34,6 +34,19 @@ export default defineConfig([
       'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-vars': 'error',
       'react/prop-types': 'off',
+      'react-refresh/only-export-components': ['error', { allowConstantExport: true }],
+    },
+  },
+  {
+    files: ['tailwind.config.js', 'postcss.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
+    files: ['src/presentation/components/ui/**/*.{js,jsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])
