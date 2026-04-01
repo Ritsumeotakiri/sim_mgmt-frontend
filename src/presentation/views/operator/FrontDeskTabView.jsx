@@ -233,33 +233,51 @@ export const FrontDeskTabView = ({
         </div>
       </div>
 
-      <div className="border border-[#f3f3f3] rounded-xl bg-white p-4">
+      <div className="border border-[#f3f3f3] rounded-xl bg-white overflow-hidden">
         {filteredCustomerInsights.length === 0 ? (
           <div className="text-sm text-[#828282] py-12 text-center">No customer matches your search.</div>
         ) : (
-          <div className="space-y-2">
-            {paginatedCustomers.map(({ customer, customerTransactions, activeSims }) => (
-              <button 
-                key={customer.id} 
-                type="button" 
-                onClick={() => openCustomerPage(customer.id)} 
-                className="w-full text-left rounded-lg border border-[#f3f3f3] p-3 hover:border-[#c9c7c7] hover:bg-[#fafafa] transition-colors"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-[#1f1f1f]">{customer.name}</p>
-                    <p className="text-xs text-[#828282]">{customer.email || 'No email'} • {customer.phone || 'No phone'}</p>
-                    <p className="text-xs text-[#828282]">ID: {customer.idNumber || 'N/A'}</p>
+          <div className="divide-y divide-[#f1f1f1]">
+            {paginatedCustomers.map(({ customer, customerTransactions, activeSims }) => {
+              const initials = String(customer.name || 'Customer')
+                .split(' ')
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase())
+                .join('');
+
+              return (
+                <button
+                  key={customer.id}
+                  type="button"
+                  onClick={() => openCustomerPage(customer.id)}
+                  className="w-full text-left px-5 py-4 sm:px-6 sm:py-5 hover:bg-[#fafafa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f1f1f]/20 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 shrink-0 rounded-full bg-[#f3f3f3] text-[#1f1f1f] flex items-center justify-center text-sm font-semibold">
+                      {initials || 'CU'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-base font-semibold text-[#1f1f1f] truncate">{customer.name}</p>
+                        <span className="text-xs text-[#828282]">ID {customer.idNumber || 'N/A'}</span>
+                      </div>
+                      <p className="text-sm text-[#828282] truncate">{customer.email || 'No email'} • {customer.phone || 'No phone'}</p>
+                    </div>
+                    <div className="shrink-0 flex flex-col items-end gap-2 text-xs text-[#5f5f5f] sm:flex-row sm:items-center sm:gap-2">
+                      <span className="rounded-full bg-[#f5f5f5] px-3 py-1.5">
+                        {customerTransactions.length} transaction(s)
+                      </span>
+                      <span className="rounded-full bg-[#eef4ff] text-[#2f4f8f] px-3 py-1.5">
+                        {activeSims.length} active SIM(s)
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right text-xs text-[#828282]">
-                    <p>{customerTransactions.length} transaction(s)</p>
-                    <p>{activeSims.length} active SIM(s)</p>
-                  </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
             {filteredCustomerInsights.length > FRONTDESK_PAGE_SIZE && (
-              <div className="flex items-center justify-between gap-2 pt-2">
+              <div className="flex items-center justify-between gap-2 px-4 py-3 sm:px-5">
                 <p className="text-xs text-[#828282]">Page {safeFrontDeskPage} of {frontDeskTotalPages}</p>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setFrontDeskPage((previous) => Math.max(1, previous - 1))} disabled={safeFrontDeskPage <= 1}>

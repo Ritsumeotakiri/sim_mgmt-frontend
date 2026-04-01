@@ -8,7 +8,7 @@ import { TabNavigationView } from '@/presentation/views/operator/components/TabN
 import { RegisterCustomerDialogView } from '@/presentation/views/operator/components/RegisterCustomerDialogView';
 import { FrontDeskTabView } from '@/presentation/views/operator/FrontDeskTabView';
 import { SimsTabView } from '@/presentation/views/operator/tabs/SimsTabView';
-import { CustomerProfileTabView } from '@/presentation/views/operator/tabs/CustomerProfileTabView';
+import { CustomerProfileTab } from '@/presentation/views/operator/tabs/CustomerProfileTabView';
 import { SimProfileTabView } from '@/presentation/views/operator/tabs/SimProfileTabView';
 import { PerformanceTabView } from '@/presentation/views/operator/tabs/PerformanceTabView';
 import { PlansTabView } from '@/presentation/views/operator/tabs/PlansTabView';
@@ -266,7 +266,7 @@ export function OperatorDashboardView({
           )}
 
           {activeTab === 'customer-profile' && (
-            <CustomerProfileTabView
+            <CustomerProfileTab
               selectedCustomerInsight={selectedCustomerInsight}
               selectedCustomerSims={selectedCustomerSims}
               paginatedCustomerSims={selectedCustomerSims.slice(

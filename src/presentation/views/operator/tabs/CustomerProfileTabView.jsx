@@ -7,11 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/presentation/components/ui/input';
 import { Label } from '@/presentation/components/ui/label';
 import { toast } from 'sonner';
-import { formatDateTime } from '@/presentation/views/operator/utils/dateUtils';
-import { CUSTOMER_SIMS_PAGE_SIZE, TIMELINE_PAGE_SIZE } from '@/presentation/views/operator/utils/constants';
+import { formatDateTime } from '../utils/dateUtils';
+import { CUSTOMER_SIMS_PAGE_SIZE, TIMELINE_PAGE_SIZE } from '../utils/constants';
 import { addBalanceToSim, assignPlanToSim } from '@/data/services/backendApi/sim';
 
-export const CustomerProfileTabView = ({
+export const CustomerProfileTab = ({
   selectedCustomerInsight,
   paginatedCustomerSims,
   paginatedTimeline,
@@ -466,5 +466,3 @@ export const CustomerProfileTabView = ({
     </div>
   );
 };
-
-

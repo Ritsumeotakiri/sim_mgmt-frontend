@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [inspectAttr(), react()],
   server: {
     port: 5173,
+    allowedHosts: ["https://targeted-socks-jose-gallery.trycloudflare.com"],
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react';
-import { Phone, User, Package, Search, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Phone, User, Package, Search, Check, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, } from '@/presentation/components/ui/dialog';
 import { Label } from '@/presentation/components/ui/label';
@@ -8,6 +8,7 @@ import { Input } from '@/presentation/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/presentation/components/ui/tabs';
 import { BackButton } from '../common/BackButton';
 import { cn } from '@/presentation/lib/utils';
+import { ScanIccidDialog } from '@/presentation/components/ScanIccidDialog';
 
 const normalizeSearchValue = (value) => String(value || '').toLowerCase().trim();
 
@@ -35,6 +36,8 @@ const computeBestMatchScore = (query, candidate) => {
   }
   return -1;
 };
+
+const normalizeIccid = (value) => String(value || '').replace(/\s+/g, '').trim();
 export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, customers, plans, preselectedMSISDN = null, availableSIMs = [], lockedCustomer = null }) {
     const [step, setStep] = useState(1);
   const [selectedMSISDN, setSelectedMSISDN] = useState(preselectedMSISDN || null);
@@ -50,6 +53,8 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
     const [simPage, setSimPage] = useState(1);
     const [customerPage, setCustomerPage] = useState(1);
     const [planPage, setPlanPage] = useState(1);
+    const [isScanOpen, setIsScanOpen] = useState(false);
+    const [scanFeedback, setScanFeedback] = useState('');
     // New customer form
     const [newCustomer, setNewCustomer] = useState({
         name: '',
@@ -164,6 +169,26 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
         return;
       }
       setSelectedSIM(filteredSelectableSIMs[0]);
+    };
+
+    const handleScanResult = (value) => {
+      const normalized = normalizeIccid(value);
+      setSimSearch(normalized);
+      setSimPage(1);
+
+      const matchedSim = availableSIMs.find((item) => {
+        const isInactive = String(item.status || '').toLowerCase() === 'inactive';
+        return isInactive && normalizeIccid(item.iccid) === normalized;
+      });
+
+      if (matchedSim) {
+        setSelectedSIM(matchedSim);
+        setScanFeedback('');
+        return;
+      }
+
+      setSelectedSIM(null);
+      setScanFeedback('Scanned ICCID not found among inactive SIMs.');
     };
 
     const SIM_PAGE_SIZE = 8;
@@ -308,15 +333,25 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
                   <p className="text-[#828282]">Selected Number</p>
                   <p className="font-medium text-[#1f1f1f]">{formatNumberDisplay(preselectedMSISDN?.number)} • {formatPrice(preselectedMSISDN?.price)}</p>
                 </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
-                  <Input placeholder="Search ICCID..." value={simSearch} onChange={(e) => setSimSearch(e.target.value)} className="pl-10"/>
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
+                    <Input placeholder="Search ICCID..." value={simSearch} onChange={(e) => {
+                    setSimSearch(e.target.value);
+                    setScanFeedback('');
+                }} className="pl-10"/>
+                  </div>
+                  <Button type="button" variant="outline" className="h-9" onClick={() => setIsScanOpen(true)}>
+                    <Camera className="w-4 h-4 mr-2"/>
+                    Scan
+                  </Button>
                 </div>
                 <div className="flex justify-end">
                   <Button type="button" variant="outline" size="sm" className="h-8" onClick={handleAutoAssignSIM} disabled={filteredSelectableSIMs.length === 0}>
                     Auto Assign ICCID
                   </Button>
                 </div>
+                {scanFeedback && <p className="text-sm text-red-600">{scanFeedback}</p>}
                 {filteredSelectableSIMs.length === 0 ? (<div className="text-center py-8 text-[#828282] border border-[#f3f3f3] rounded-lg">
                     <p>No inactive ICCID available for this sale.</p>
                   </div>) : (<div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
@@ -421,15 +456,25 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
                     <p className="text-[#828282]">Selected Number</p>
                     <p className="font-medium text-[#1f1f1f]">{formatNumberDisplay(selectedMSISDN.number)} • {formatPrice(selectedMSISDN.price)}</p>
                   </div>)}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
-                  <Input placeholder="Search ICCID..." value={simSearch} onChange={(e) => setSimSearch(e.target.value)} className="pl-10"/>
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
+                    <Input placeholder="Search ICCID..." value={simSearch} onChange={(e) => {
+                    setSimSearch(e.target.value);
+                    setScanFeedback('');
+                }} className="pl-10"/>
+                  </div>
+                  <Button type="button" variant="outline" className="h-9" onClick={() => setIsScanOpen(true)}>
+                    <Camera className="w-4 h-4 mr-2"/>
+                    Scan
+                  </Button>
                 </div>
                 <div className="flex justify-end">
                   <Button type="button" variant="outline" size="sm" className="h-8" onClick={handleAutoAssignSIM} disabled={filteredSelectableSIMs.length === 0}>
                     Auto Assign ICCID
                   </Button>
                 </div>
+                {scanFeedback && <p className="text-sm text-red-600">{scanFeedback}</p>}
                 {filteredSelectableSIMs.length === 0 ? (<div className="text-center py-8 text-[#828282] border border-[#f3f3f3] rounded-lg">
                     <p>No inactive ICCID available for this sale.</p>
                   </div>) : (<div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
@@ -530,15 +575,25 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
               <p className="text-[#828282]">Selected Number</p>
               <p className="font-medium text-[#1f1f1f]">{formatNumberDisplay(selectedMSISDN?.number)} • {formatPrice(selectedMSISDN?.price)}</p>
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
-              <Input placeholder="Search ICCID..." value={simSearch} onChange={(e) => setSimSearch(e.target.value)} className="pl-10"/>
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
+                <Input placeholder="Search ICCID..." value={simSearch} onChange={(e) => {
+                setSimSearch(e.target.value);
+                setScanFeedback('');
+              }} className="pl-10"/>
+              </div>
+              <Button type="button" variant="outline" className="h-9" onClick={() => setIsScanOpen(true)}>
+                <Camera className="w-4 h-4 mr-2"/>
+                Scan
+              </Button>
             </div>
             <div className="flex justify-end">
               <Button type="button" variant="outline" size="sm" className="h-8" onClick={handleAutoAssignSIM} disabled={filteredSelectableSIMs.length === 0}>
                 Auto Assign ICCID
               </Button>
             </div>
+            {scanFeedback && <p className="text-sm text-red-600">{scanFeedback}</p>}
             {filteredSelectableSIMs.length === 0 ? (<div className="text-center py-8 text-[#828282] border border-[#f3f3f3] rounded-lg">
                 <p>No inactive ICCID available for this sale.</p>
               </div>) : (<div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
@@ -654,6 +709,11 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
           </Button>
         </div>
       </DialogContent>
+      <ScanIccidDialog
+        isOpen={isScanOpen}
+        onClose={() => setIsScanOpen(false)}
+        onScan={handleScanResult}
+      />
     </Dialog>);
 }
 

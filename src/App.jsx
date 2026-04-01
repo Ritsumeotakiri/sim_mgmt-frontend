@@ -57,8 +57,8 @@ function App() {
         authToken: auth.token,
     });
     const msisdnManagement = useMSISDNManagement();
+
     // ========== View State ==========
-    const [currentView, setCurrentView] = useState('dashboard');
     const [notificationsClearedAt, setNotificationsClearedAt] = useState(() => {
         try {
             const raw = window.localStorage.getItem('sim-notifications-cleared-at');
@@ -96,6 +96,22 @@ function App() {
         const match = location.pathname.match(/^\/dashboard\/branches\/(.+)$/);
         return match ? decodeURIComponent(match[1]) : null;
     }, [location.pathname]);
+
+    const currentView = useMemo(() => {
+        if (!auth.isAuthenticated) {
+            return 'dashboard';
+        }
+
+        if (location.pathname.startsWith('/sims/')) {
+            return 'sims';
+        }
+
+        if (location.pathname.startsWith('/dashboard/branches/')) {
+            return 'dashboard';
+        }
+
+        return PATH_TO_VIEW[location.pathname] || 'dashboard';
+    }, [auth.isAuthenticated, location.pathname]);
 
     const handleClearNotifications = () => {
         const clearedAt = Date.now();
@@ -149,7 +165,6 @@ function App() {
     const handleLoginAndResetView = async (identifier, password) => {
         const success = await handleLogin(identifier, password);
         if (success) {
-            setCurrentView('dashboard');
             navigate(VIEW_TO_PATH.dashboard, { replace: true });
         }
         return success;
@@ -157,20 +172,19 @@ function App() {
 
     const navigateToView = (view, options) => {
         const nextPath = VIEW_TO_PATH[view] || VIEW_TO_PATH.dashboard;
-        setCurrentView(view in VIEW_TO_PATH ? view : 'dashboard');
         navigate(nextPath, options);
     };
 
     const handleLogoutAndNavigate = () => {
         handleLogout();
-        setCurrentView('dashboard');
         navigate('/login', { replace: true });
     };
 
     useEffect(() => {
         if (!auth.isAuthenticated) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setCurrentView('dashboard');
+            if (location.pathname !== '/login') {
+                navigate('/login', { replace: true });
+            }
             return;
         }
 
@@ -185,11 +199,7 @@ function App() {
             navigate(VIEW_TO_PATH.dashboard, { replace: true });
             return;
         }
-
-        if (inferredView !== currentView) {
-            setCurrentView(inferredView);
-        }
-    }, [auth.isAuthenticated, currentView, location.pathname, navigate]);
+    }, [auth.isAuthenticated, location.pathname, navigate]);
 
     const userRole = auth.userRole;
     // ========== Page Configuration ==========

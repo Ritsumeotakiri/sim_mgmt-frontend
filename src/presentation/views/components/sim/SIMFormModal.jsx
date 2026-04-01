@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/presentation/components/ui/tabs';
 import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequestWithMeta } from '@/data/services/backendApi/client';
+import { ScanIccidDialog } from '@/presentation/components/ScanIccidDialog';
 const statuses = ['active', 'pending', 'suspended', 'inactive'];
 const batchStatuses = ['inactive', 'active', 'suspended', 'blocked'];
 export function SIMFormModal({ isOpen, onClose, onSave, onBatchImport, sim }) {
@@ -15,6 +16,7 @@ export function SIMFormModal({ isOpen, onClose, onSave, onBatchImport, sim }) {
         status: 'inactive',
         branchId: 'none',
     });
+    const [isScanOpen, setIsScanOpen] = useState(false);
   const [importMode, setImportMode] = useState('single');
   const [batchStatus, setBatchStatus] = useState('inactive');
   const [batchBranchId, setBatchBranchId] = useState('none');
@@ -137,7 +139,12 @@ export function SIMFormModal({ isOpen, onClose, onSave, onBatchImport, sim }) {
             <TabsContent value="single" className="space-y-4 mt-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="iccid">ICCID (SIM Card Number)</Label>
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="iccid">ICCID (SIM Card Number)</Label>
+                    <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setIsScanOpen(true)}>
+                      Scan
+                    </Button>
+                  </div>
                   <Input id="iccid" placeholder="8901234567890123456" value={formData.iccid} onChange={(e) => handleChange('iccid', e.target.value)} className="font-mono" required/>
                   <p className="text-xs text-[#828282]">
                     The ICCID is the unique identifier printed on the SIM card.
@@ -255,6 +262,11 @@ export function SIMFormModal({ isOpen, onClose, onSave, onBatchImport, sim }) {
             </TabsContent>
           </Tabs>)}
       </DialogContent>
+      <ScanIccidDialog
+        isOpen={isScanOpen}
+        onClose={() => setIsScanOpen(false)}
+        onScan={(value) => handleChange('iccid', value)}
+      />
     </Dialog>);
 }
 
