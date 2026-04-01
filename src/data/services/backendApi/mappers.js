@@ -6,6 +6,17 @@ export function asDate(value) {
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
+
+export function asOptionalDate(value) {
+    if (!value) {
+        return null;
+    }
+    if (value instanceof Date) {
+        return value;
+    }
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
 function mapRole(role) {
     if (role === 'admin')
         return 'admin';
@@ -173,6 +184,11 @@ export function mapUser(item) {
         branchName: item.branch_name || null,
         avatar: resolveAvatar(item, id),
         createdAt: asDate(item.created_at),
+        lastLoginAt: asOptionalDate(item.last_login_at),
+        lastLogoutAt: asOptionalDate(item.last_logout_at),
+        sessionExpiresAt: asOptionalDate(item.active_session_expires_at ?? item.last_session_expires_at),
+        sessionActive: Boolean(item.session_active),
+        lastSessionIp: item.last_session_ip || null,
     };
 }
 export function toBackendRole(role) {

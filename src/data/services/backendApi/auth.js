@@ -17,3 +17,9 @@ export async function login(params) {
     };
 }
 
+export async function logout() {
+    await apiRequest(ENDPOINTS.auth.logout, {
+        method: 'POST',
+    });
+}
+

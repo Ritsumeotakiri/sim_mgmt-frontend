@@ -47,8 +47,9 @@ export function BranchPerformanceDetailView({
   // Normalize users
   const usersByUsername = useMemo(() => {
     return users.reduce((acc, user) => {
-      if (user?.username) {
-        acc[user.username.toLowerCase().trim()] = user;
+      const key = String(user?.username || user?.name || '').toLowerCase().trim();
+      if (key) {
+        acc[key] = user;
       }
       return acc;
     }, {});
@@ -93,6 +94,11 @@ export function BranchPerformanceDetailView({
           revenue: Number(item.sim_sales_amount || 0),
           actions: Number(item.total_system_actions || 0),
           lastActivityAt: item.last_activity_at || null,
+          sessionActive: Boolean(matchedUser?.sessionActive),
+          lastLoginAt: matchedUser?.lastLoginAt || null,
+          lastLogoutAt: matchedUser?.lastLogoutAt || null,
+          sessionExpiresAt: matchedUser?.sessionExpiresAt || null,
+          lastSessionIp: matchedUser?.lastSessionIp || null,
         };
       })
       .sort((a, b) => b.simSold - a.simSold || b.actions - a.actions);
@@ -272,6 +278,46 @@ export function BranchPerformanceDetailView({
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden flex flex-col mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+              <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                <p className="text-xs text-[#828282]">Session Status</p>
+                <p className={`text-sm font-medium ${selectedEmployee?.sessionActive ? 'text-[#3ebb7f]' : 'text-[#828282]'}`}>
+                  {selectedEmployee?.sessionActive ? 'Active' : 'Inactive'}
+                </p>
+              </div>
+              <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                <p className="text-xs text-[#828282]">Last Login</p>
+                <p className="text-sm font-medium text-[#1f1f1f]">
+                  {selectedEmployee?.lastLoginAt
+                    ? new Date(selectedEmployee.lastLoginAt).toLocaleString()
+                    : 'Never'}
+                </p>
+              </div>
+              <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                <p className="text-xs text-[#828282]">Last Logout</p>
+                <p className="text-sm font-medium text-[#1f1f1f]">
+                  {selectedEmployee?.lastLogoutAt
+                    ? new Date(selectedEmployee.lastLogoutAt).toLocaleString()
+                    : 'N/A'}
+                </p>
+              </div>
+              <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                <p className="text-xs text-[#828282]">Session Expires</p>
+                <p className="text-sm font-medium text-[#1f1f1f]">
+                  {selectedEmployee?.sessionExpiresAt
+                    ? new Date(selectedEmployee.sessionExpiresAt).toLocaleString()
+                    : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            {selectedEmployee?.lastSessionIp && (
+              <div className="bg-white border border-[#f3f3f3] rounded-lg p-3 mb-4">
+                <p className="text-xs text-[#828282]">Last Session IP</p>
+                <p className="text-sm font-medium text-[#1f1f1f]">{selectedEmployee.lastSessionIp}</p>
+              </div>
+            )}
+
             <div className="max-h-[520px] overflow-y-auto">
               {selectedEmployeeActions.length === 0 ? (
                 <div className="text-center py-16">

@@ -1,4 +1,4 @@
-import { login } from './backendApi/auth';
+import { login, logout } from './backendApi/auth';
 import { createBranch } from './backendApi/branch';
 import { getOperatorPerformance } from './backendApi/dashboard';
 import { createCustomer, deleteCustomer, updateCustomer } from './backendApi/customer';
@@ -11,6 +11,7 @@ import { createUser, deleteUser, updateUser } from './backendApi/user';
 export { mapSim } from './backendApi/mappers';
 export const backendApi = {
     login,
+    logout,
     getInitialData,
     getOperatorPerformance,
     createSim,

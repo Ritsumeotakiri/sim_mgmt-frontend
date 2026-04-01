@@ -146,7 +146,13 @@ export function useAuth() {
             return false;
         }
     };
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await backendApi.logout();
+        }
+        catch {
+            // Ignore logout failures to avoid trapping the user
+        }
         setAuth(UNAUTHENTICATED_STATE);
         resetAuthExpiredState();
         clearAuthStorage();

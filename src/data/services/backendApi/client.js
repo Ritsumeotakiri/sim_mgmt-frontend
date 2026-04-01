@@ -67,7 +67,7 @@ function getAuthToken() {
 }
 
 function getRequestToken(path) {
-    if (path.startsWith('/auth/')) {
+    if (path.startsWith('/auth/') && path !== '/auth/logout') {
         return null;
     }
     const token = getAuthToken();

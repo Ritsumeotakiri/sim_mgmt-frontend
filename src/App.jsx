@@ -175,8 +175,8 @@ function App() {
         navigate(nextPath, options);
     };
 
-    const handleLogoutAndNavigate = () => {
-        handleLogout();
+    const handleLogoutAndNavigate = async () => {
+        await handleLogout();
         navigate('/login', { replace: true });
     };
 

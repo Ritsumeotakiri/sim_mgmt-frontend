@@ -451,6 +451,46 @@ export function UserManagement({ users, transactions = [], onAdd, onEdit, onDele
               </div>
 
               <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                  <p className="text-xs text-[#828282]">Session Status</p>
+                  <p className={`text-sm font-medium ${selectedProfileUser.sessionActive ? 'text-[#3ebb7f]' : 'text-[#828282]'}`}>
+                    {selectedProfileUser.sessionActive ? 'Active' : 'Inactive'}
+                  </p>
+                </div>
+                <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                  <p className="text-xs text-[#828282]">Session Expires</p>
+                  <p className="text-sm font-medium text-[#1f1f1f]">
+                    {selectedProfileUser.sessionExpiresAt
+                      ? selectedProfileUser.sessionExpiresAt.toLocaleString()
+                      : 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                  <p className="text-xs text-[#828282]">Last Login</p>
+                  <p className="text-sm font-medium text-[#1f1f1f]">
+                    {selectedProfileUser.lastLoginAt
+                      ? selectedProfileUser.lastLoginAt.toLocaleString()
+                      : 'Never'}
+                  </p>
+                </div>
+                <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#f3f3f3]">
+                  <p className="text-xs text-[#828282]">Last Logout</p>
+                  <p className="text-sm font-medium text-[#1f1f1f]">
+                    {selectedProfileUser.lastLogoutAt
+                      ? selectedProfileUser.lastLogoutAt.toLocaleString()
+                      : 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              {selectedProfileUser.lastSessionIp && (
+                <div className="bg-white border border-[#f3f3f3] rounded-lg p-3">
+                  <p className="text-xs text-[#828282]">Last Session IP</p>
+                  <p className="text-sm font-medium text-[#1f1f1f]">{selectedProfileUser.lastSessionIp}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
                 <div className="bg-[#f3f3f3] rounded-lg p-3">
                   <p className="text-xs text-[#828282]">Sales</p>
                   <p className="text-base font-semibold text-[#1f1f1f]">{performanceByUserName[selectedProfileUser.name]?.salesCount || 0}</p>
