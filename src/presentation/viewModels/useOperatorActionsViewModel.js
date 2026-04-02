@@ -7,6 +7,7 @@ export function useOperatorActionsViewModel({
   branchId,
   localSims,
   onSellSIM,
+  onReactivateSIM,
   selectedCustomerSim,
   setSelectedCustomerSim,
   setLocalCustomers,
@@ -43,6 +44,19 @@ export function useOperatorActionsViewModel({
     return Boolean(success);
   }, [onSellSIM, refreshData, setIsSellModalOpen, setSellingSIM]);
 
+  const handleCompleteReactivation = useCallback(async (saleData) => {
+    if (typeof onReactivateSIM !== 'function') {
+      return false;
+    }
+    const success = await onReactivateSIM(saleData);
+    if (success) {
+      setIsSellModalOpen(false);
+      setSellingSIM(null);
+      await refreshData(saleData?.simId ?? null);
+    }
+    return Boolean(success);
+  }, [onReactivateSIM, refreshData, setIsSellModalOpen, setSellingSIM]);
+
   const handleOpenQuickSale = useCallback(() => {
     setSellingSIM({ customerBuyFlow: true });
     setIsSellModalOpen(true);
@@ -75,6 +89,7 @@ export function useOperatorActionsViewModel({
     isRefreshing,
     refreshData,
     handleCompleteSale,
+    handleCompleteReactivation,
     handleOpenQuickSale,
     handleQuickTopUp,
     handleQuickChangePlan,

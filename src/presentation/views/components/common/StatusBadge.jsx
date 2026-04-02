@@ -3,7 +3,10 @@ const simStatusStyles = {
     active: 'bg-[#3ebb7f]/10 text-[#3ebb7f]',
     pending: 'bg-[#f6a94c]/10 text-[#f6a94c]',
     suspended: 'bg-[#e9423a]/10 text-[#e9423a]',
+    suspend: 'bg-[#e9423a]/10 text-[#e9423a]',
+    blocked: 'bg-[#e9423a]/10 text-[#e9423a]',
     inactive: 'bg-[#828282]/10 text-[#828282]',
+    deactivate: 'bg-[#6b7280]/10 text-[#6b7280]',
 };
 const transactionStatusStyles = {
     completed: 'bg-[#3ebb7f]/10 text-[#3ebb7f]',

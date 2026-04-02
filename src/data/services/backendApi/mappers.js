@@ -116,10 +116,19 @@ function resolveAvatar(item, id) {
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.username}`;
 }
 function mapSimStatus(status) {
-    if (status === 'active')
+    const normalized = String(status || '').toLowerCase();
+    if (normalized === 'active') {
         return 'active';
-    if (status === 'suspended' || status === 'blocked')
-        return 'suspended';
+    }
+    if (normalized === 'suspend' || normalized === 'suspended' || normalized === 'blocked') {
+        return 'suspend';
+    }
+    if (normalized === 'deactivate' || normalized === 'deactivated') {
+        return 'deactivate';
+    }
+    if (normalized === 'inactive' || normalized === 'pending') {
+        return 'inactive';
+    }
     return 'inactive';
 }
 export function mapSim(sim) {

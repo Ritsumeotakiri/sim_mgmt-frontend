@@ -10,6 +10,8 @@ export const ENDPOINTS = {
         byId: (id) => `/sims/${id}`,
         history: (id) => `/sims/${id}/history`,
         assignPlan: (id) => `/sims/${id}/assign-plan`,
+        deactivate: (id) => `/sims/${id}/deactivate`,
+        reactivate: (id) => `/sims/${id}/reactivate`,
     },
     numberPool: {
         list: '/number-pool',

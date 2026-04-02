@@ -38,7 +38,7 @@ const computeBestMatchScore = (query, candidate) => {
 };
 
 const normalizeIccid = (value) => String(value || '').replace(/\s+/g, '').trim();
-export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, customers, plans, preselectedMSISDN = null, availableSIMs = [], lockedCustomer = null }) {
+export function SellSIMModal({ isOpen, onClose, onSell, onReactivate, sim, availableMSISDNs, customers, plans, preselectedMSISDN = null, availableSIMs = [], lockedCustomer = null }) {
     const [step, setStep] = useState(1);
   const [selectedMSISDN, setSelectedMSISDN] = useState(preselectedMSISDN || null);
   const [selectedSIM, setSelectedSIM] = useState(sim || null);
@@ -92,8 +92,10 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
 
     const hasPreselectedMSISDN = Boolean(preselectedMSISDN);
     const isLockedCustomerFlow = Boolean(lockedCustomer);
-    const requiresIccidStep = !sim && !hasPreselectedMSISDN && !isLockedCustomerFlow;
-    const totalSteps = requiresIccidStep ? 4 : 3;
+    const isReactivationFlow = Boolean(sim?.reactivate);
+    const requiresIccidStep = !isReactivationFlow && !sim && !hasPreselectedMSISDN && !isLockedCustomerFlow;
+    const totalSteps = isReactivationFlow ? 2 : (requiresIccidStep ? 4 : 3);
+    const submitLabel = isReactivationFlow ? 'Complete Reactivation' : 'Complete Sale';
 
     const msisdnPriceMatches = (price, filter) => {
       const value = Number(price || 0);
@@ -224,6 +226,10 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
       setCustomerSearch('');
       setMsisdnSearch('');
       setSimSearch('');
+      if (isReactivationFlow && lockedCustomer) {
+        setCustomerTab('existing');
+        setSelectedCustomer(lockedCustomer);
+      }
     }, [isOpen, preselectedMSISDN, sim]);
 
     useEffect(() => {
@@ -243,11 +249,12 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
       const resolvedMSISDN = hasPreselectedMSISDN ? preselectedMSISDN : selectedMSISDN;
         if (!resolvedSIM || !resolvedMSISDN || !selectedPlan)
             return;
-        const success = await onSell({
+      const handler = isReactivationFlow && typeof onReactivate === 'function' ? onReactivate : onSell;
+      const success = await handler({
             simId: resolvedSIM.id,
             msisdnId: resolvedMSISDN.id,
-        customerId: isLockedCustomerFlow ? lockedCustomer.id : customerTab === 'existing' ? selectedCustomer?.id || null : null,
-        newCustomer: isLockedCustomerFlow ? null : customerTab === 'new' ? newCustomer : null,
+      customerId: isReactivationFlow ? lockedCustomer?.id || null : (isLockedCustomerFlow ? lockedCustomer.id : customerTab === 'existing' ? selectedCustomer?.id || null : null),
+        newCustomer: (isReactivationFlow || isLockedCustomerFlow) ? null : customerTab === 'new' ? newCustomer : null,
             planId: selectedPlan.id,
         });
         if (!success) {
@@ -271,6 +278,9 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
         return selectedMSISDN !== null;
       }
         if (step === 2) {
+            if (isReactivationFlow) {
+              return selectedPlan !== null;
+            }
             if (isLockedCustomerFlow) {
               return selectedSIM !== null;
             }
@@ -298,15 +308,17 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
     return (<Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Sell SIM Card</DialogTitle>
+          <DialogTitle>{isReactivationFlow ? 'Reactivate SIM' : 'Sell SIM Card'}</DialogTitle>
           <DialogDescription>
-            {isLockedCustomerFlow
+            {isReactivationFlow
+            ? `Reactivate SIM ${sim?.iccid || ''} by assigning MSISDN and plan.`
+            : isLockedCustomerFlow
             ? `Buy SIM for ${lockedCustomer?.name || 'customer'} by selecting number pool, ICCID, and plan.`
             : hasPreselectedMSISDN
             ? `Sell number ${preselectedMSISDN?.number || ''} by selecting ICCID, customer, and plan.`
             : sim?.iccid
             ? `Sell SIM ${sim.iccid} by assigning MSISDN, customer, and plan.`
-            : `Sell SIM by assigning MSISDN, ICCID, customer, and plan.`}
+            : 'Sell SIM by assigning MSISDN, ICCID, customer, and plan.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -318,9 +330,9 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
               </div>
               <span className={cn("ml-2 text-sm", step >= s ? "text-[#1f1f1f] font-medium" : "text-[#828282]")}>
                 {s === 1 && (hasPreselectedMSISDN ? 'Select ICCID' : 'Select Number')}
-                {s === 2 && (isLockedCustomerFlow ? 'Select ICCID' : 'Select Customer')}
+                {s === 2 && (isReactivationFlow ? 'Select Plan' : (isLockedCustomerFlow ? 'Select ICCID' : 'Select Customer'))}
                 {requiresIccidStep && s === 3 && 'Select ICCID'}
-                {s === totalSteps && 'Select Plan'}
+                {s === totalSteps && !(isReactivationFlow && s === 2) && 'Select Plan'}
               </span>
               {s < totalSteps && <div className="w-12 h-px bg-[#e5e5e5] mx-4"/>}
             </div>))}
@@ -413,7 +425,9 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
                         <div className="grid grid-cols-2 gap-3">
                     {paginatedMSISDNs.map((msisdn) => (<button key={msisdn.id} onClick={() => {
                         setSelectedMSISDN(msisdn);
-                        setSelectedSIM(null);
+                        if (!isReactivationFlow) {
+                          setSelectedSIM(null);
+                        }
                       }} className={cn("p-4 rounded-lg border-2 text-left transition-all", selectedMSISDN?.id === msisdn.id
                             ? "border-[#1f1f1f] bg-[#f3f3f3]"
                             : "border-[#f3f3f3] hover:border-[#c9c7c7]")}>
@@ -450,7 +464,7 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
           </div>)}
 
         {/* Step 2: Select ICCID or Customer */}
-        {step === 2 && (<div className="space-y-4">
+        {step === 2 && !isReactivationFlow && (<div className="space-y-4">
             {isLockedCustomerFlow ? (<>
               {selectedMSISDN && (<div className="p-3 rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] text-sm">
                     <p className="text-[#828282]">Selected Number</p>
@@ -666,7 +680,7 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
 
         {/* Summary */}
         {step === totalSteps && ((hasPreselectedMSISDN || isLockedCustomerFlow || !sim) ? selectedSIM : sim) && (hasPreselectedMSISDN ? preselectedMSISDN : selectedMSISDN) && selectedPlan && (<div className="mt-6 p-4 bg-[#f3f3f3] rounded-lg">
-            <p className="text-sm font-medium text-[#1f1f1f] mb-2">Sale Summary</p>
+          <p className="text-sm font-medium text-[#1f1f1f] mb-2">{isReactivationFlow ? 'Reactivation Summary' : 'Sale Summary'}</p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-[#828282]">SIM ICCID:</span>
@@ -683,7 +697,9 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
               <div className="flex justify-between">
                 <span className="text-[#828282]">Customer:</span>
                 <span>
-                  {isLockedCustomerFlow
+                  {isReactivationFlow
+                ? lockedCustomer?.name
+                : isLockedCustomerFlow
                 ? lockedCustomer?.name
                 : customerTab === 'existing'
                 ? selectedCustomer?.name
@@ -705,7 +721,7 @@ export function SellSIMModal({ isOpen, onClose, onSell, sim, availableMSISDNs, c
         <div className="flex justify-between pt-4 mt-4 border-t border-[#f3f3f3]">
           {step === 1 ? (<Button variant="outline" onClick={onClose}>Cancel</Button>) : (<BackButton onClick={handleBack} label="Back"/>) }
           <Button onClick={handleNext} disabled={!canProceed()} className="bg-[#1f1f1f] hover:bg-[#1f1f1f]/90">
-            {step === totalSteps ? 'Complete Sale' : 'Next'}
+            {step === totalSteps ? submitLabel : 'Next'}
           </Button>
         </div>
       </DialogContent>

@@ -146,6 +146,55 @@ export async function deleteSim(id) {
     await apiRequest(ENDPOINTS.sims.byId(id), { method: 'DELETE' });
 }
 
+export async function deactivateSim(params) {
+    if (!params?.simId && params?.simId !== 0) {
+        throw new Error('simId is required');
+    }
+    if (!params?.changedBy && params?.changedBy !== 0) {
+        throw new Error('changedBy is required');
+    }
+    const simId = toSafeNumber(params.simId);
+    const changedBy = toSafeNumber(params.changedBy);
+    if (simId === null) {
+        throw new Error('simId must be a valid number');
+    }
+    if (changedBy === null) {
+        throw new Error('changedBy must be a valid number');
+    }
+
+    return apiRequest(ENDPOINTS.sims.deactivate(simId), {
+        method: 'POST',
+        body: JSON.stringify({
+            changed_by: changedBy,
+        }),
+    });
+}
+
+export async function reactivateSim(params) {
+    if (!params?.simId && params?.simId !== 0) {
+        throw new Error('simId is required');
+    }
+    if (!params?.msisdnId) {
+        throw new Error('msisdnId is required');
+    }
+    if (!params?.customerId) {
+        throw new Error('customerId is required');
+    }
+    if (!params?.planId) {
+        throw new Error('planId is required');
+    }
+
+    return apiRequest(ENDPOINTS.sims.reactivate(params.simId), {
+        method: 'POST',
+        body: JSON.stringify({
+            msisdn_id: Number(params.msisdnId),
+            customer_id: Number(params.customerId),
+            plan_id: Number(params.planId),
+            changed_by: params.changedBy != null ? Number(params.changedBy) : null,
+        }),
+    });
+}
+
 export async function assignSale(params) {
     // Validate required fields for sale
     if (!params.customerId) {

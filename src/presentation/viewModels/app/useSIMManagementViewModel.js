@@ -4,7 +4,7 @@ import { backendApi } from '@/data/services/backendApi';
 import { isAuthExpiredError } from '@/data/services/backendApi/client';
 import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequestWithMeta } from '@/data/services/backendApi/client';
-export function useSIMManagementViewModel({ userName, isAuthenticated, authToken, userRole = null, userBranchId = null, }) {
+export function useSIMManagementViewModel({ userName, userId, isAuthenticated, authToken, userRole = null, userBranchId = null, }) {
     const [sims, setSims] = useState([]);
     const [msisdns, setMsisdns] = useState([]);
     const [customers, setCustomers] = useState([]);
@@ -14,7 +14,7 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
     const [totals, setTotals] = useState({
         totalSIMs: null,
         activeSIMs: null,
-        pendingSIMs: null,
+        deactivatedSIMs: null,
         suspendedSIMs: null,
         inactiveSIMs: null,
         totalMSISDNs: null,
@@ -42,7 +42,7 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
             setTotals({
                 totalSIMs: null,
                 activeSIMs: null,
-                pendingSIMs: null,
+                deactivatedSIMs: null,
                 suspendedSIMs: null,
                 inactiveSIMs: null,
                 totalMSISDNs: null,
@@ -57,13 +57,13 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
             try {
                 const isManagerScoped = userRole === 'manager' && userBranchId != null;
                 const normalizedBranchId = userBranchId != null ? String(userBranchId) : null;
-                const [initialDataResult, operatorPerformanceResult, totalSimsRes, activeSimsRes, pendingSimsRes, suspendedSimsRes, inactiveSimsRes, totalMsisdnsRes, availableMsisdnsRes, totalCustomersRes, totalTransactionsRes] = await Promise.allSettled([
+                const [initialDataResult, operatorPerformanceResult, totalSimsRes, activeSimsRes, deactivatedSimsRes, suspendedSimsRes, inactiveSimsRes, totalMsisdnsRes, availableMsisdnsRes, totalCustomersRes, totalTransactionsRes] = await Promise.allSettled([
                     backendApi.getInitialData(),
                     backendApi.getOperatorPerformance(),
                     apiRequestWithMeta(`${ENDPOINTS.sims.list}?page=1&pageSize=1`),
                     apiRequestWithMeta(`${ENDPOINTS.sims.list}?status=active&page=1&pageSize=1`),
-                    Promise.resolve({ pagination: { totalRecords: 0 } }),
-                    apiRequestWithMeta(`${ENDPOINTS.sims.list}?status=suspended&page=1&pageSize=1`),
+                    apiRequestWithMeta(`${ENDPOINTS.sims.list}?status=deactivate&page=1&pageSize=1`),
+                    apiRequestWithMeta(`${ENDPOINTS.sims.list}?status=suspend&page=1&pageSize=1`),
                     apiRequestWithMeta(`${ENDPOINTS.sims.list}?status=inactive&page=1&pageSize=1`),
                     apiRequestWithMeta(`${ENDPOINTS.numberPool.list}?page=1&pageSize=1`),
                     apiRequestWithMeta(`${ENDPOINTS.numberPool.list}?status=available&page=1&pageSize=1`),
@@ -96,7 +96,7 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
                     setTotals({
                         totalSIMs: null,
                         activeSIMs: null,
-                        pendingSIMs: null,
+                        deactivatedSIMs: null,
                         suspendedSIMs: null,
                         inactiveSIMs: null,
                         totalMSISDNs: null,
@@ -109,7 +109,7 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
                     setTotals({
                         totalSIMs: totalSimsRes.status === 'fulfilled' ? totalSimsRes.value?.pagination?.totalRecords ?? null : null,
                         activeSIMs: activeSimsRes.status === 'fulfilled' ? activeSimsRes.value?.pagination?.totalRecords ?? null : null,
-                        pendingSIMs: pendingSimsRes.status === 'fulfilled' ? pendingSimsRes.value?.pagination?.totalRecords ?? null : null,
+                        deactivatedSIMs: deactivatedSimsRes.status === 'fulfilled' ? deactivatedSimsRes.value?.pagination?.totalRecords ?? null : null,
                         suspendedSIMs: suspendedSimsRes.status === 'fulfilled' ? suspendedSimsRes.value?.pagination?.totalRecords ?? null : null,
                         inactiveSIMs: inactiveSimsRes.status === 'fulfilled' ? inactiveSimsRes.value?.pagination?.totalRecords ?? null : null,
                         totalMSISDNs: totalMsisdnsRes.status === 'fulfilled' ? totalMsisdnsRes.value?.pagination?.totalRecords ?? null : null,
@@ -132,8 +132,8 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
     const stats = useMemo(() => ({
         totalSIMs: totals.totalSIMs ?? sims.length,
         activeSIMs: totals.activeSIMs ?? sims.filter(s => s.status === 'active').length,
-        pendingSIMs: totals.pendingSIMs ?? sims.filter(s => s.status === 'pending').length,
-        suspendedSIMs: totals.suspendedSIMs ?? sims.filter(s => s.status === 'suspended').length,
+        deactivatedSIMs: totals.deactivatedSIMs ?? sims.filter(s => s.status === 'deactivate').length,
+        suspendedSIMs: totals.suspendedSIMs ?? sims.filter(s => s.status === 'suspend').length,
         inactiveSIMs: totals.inactiveSIMs ?? sims.filter(s => s.status === 'inactive').length,
         totalMSISDNs: totals.totalMSISDNs ?? msisdns.length,
         availableMSISDNs: totals.availableMSISDNs ?? msisdns.filter(m => m.status === 'available').length,
@@ -184,7 +184,7 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
                     customerName: editingSIM.assignedTo,
                     planId: editingSIM.planId,
                     planName: null,
-                    type: simData.status === 'suspended' ? 'suspension' : simData.status === 'active' ? 'activation' : 'deactivation',
+                    type: simData.status === 'suspend' ? 'suspension' : simData.status === 'active' ? 'activation' : 'deactivation',
                     date: new Date(),
                     userId: '1',
                     userName: userName,
@@ -487,6 +487,92 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
         setSellingSIM(null);
         return true;
     };
+
+    const completeReactivation = async (saleData) => {
+        const msisdn = msisdns.find(m => m.id === saleData.msisdnId);
+        const plan = plans.find(p => p.id === saleData.planId);
+        let customer = null;
+        if (saleData.newCustomer) {
+            try {
+                customer = await backendApi.createCustomer(saleData.newCustomer);
+                setCustomers(prev => [...prev, customer]);
+            }
+            catch (error) {
+                if (isAuthExpiredError(error)) {
+                    return false;
+                }
+                toast.error(error instanceof Error ? error.message : 'Failed to create customer');
+                return false;
+            }
+        }
+        else if (saleData.customerId) {
+            customer = customers.find(c => c.id === saleData.customerId) || null;
+        }
+
+        if (!msisdn || !plan || !customer) {
+            toast.error('Missing required information');
+            return false;
+        }
+
+        try {
+            await backendApi.reactivateSim({
+                simId: saleData.simId,
+                msisdnId: saleData.msisdnId,
+                customerId: customer.id,
+                planId: plan.id,
+                changedBy: userId,
+            });
+        }
+        catch (error) {
+            if (isAuthExpiredError(error)) {
+                return false;
+            }
+            toast.error(error instanceof Error ? error.message : 'Failed to reactivate SIM');
+            return false;
+        }
+
+        setMsisdns(prev => prev.map(m => m.id === saleData.msisdnId
+            ? {
+                ...m,
+                status: 'assigned',
+                simId: saleData.simId,
+                simIccid: sellingSIM?.iccid || null,
+                assignedAt: new Date()
+            }
+            : m));
+        setSims(prev => prev.map(sim => sim.id === saleData.simId
+            ? {
+                ...sim,
+                msisdn: msisdn.number,
+                status: 'active',
+                customerId: customer.id,
+                planId: plan.id,
+                assignedTo: customer.name,
+                updatedAt: new Date()
+            }
+            : sim));
+        const newTransaction = {
+            id: Date.now().toString(),
+            simId: saleData.simId,
+            simIccid: sellingSIM?.iccid || '',
+            msisdn: msisdn.number,
+            customerId: customer.id,
+            customerName: customer.name,
+            planId: plan.id,
+            planName: plan.name,
+            type: 'reactivation',
+            date: new Date(),
+            userId: '1',
+            userName: userName,
+            status: 'completed',
+            notes: `Reactivated for ${customer.name} with ${plan.name}`,
+        };
+        setTransactions(prev => [newTransaction, ...prev]);
+        reloadData();
+        toast.success(`SIM reactivated successfully for ${customer.name}!`);
+        setSellingSIM(null);
+        return true;
+    };
     return {
         sims,
         msisdns,
@@ -525,6 +611,7 @@ export function useSIMManagementViewModel({ userName, isAuthenticated, authToken
         openEditSIMModal,
         handleSellSIM,
         completeSale,
+        completeReactivation,
     };
 }
 

@@ -5,7 +5,7 @@ import { Label } from '@/presentation/components/ui/label';
 import { Input } from '@/presentation/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/presentation/components/ui/select';
 import { ScanIccidDialog } from '@/presentation/components/ScanIccidDialog';
-const statuses = ['active', 'pending', 'suspended', 'inactive'];
+const statuses = ['active', 'inactive', 'suspend', 'deactivate'];
 const getInitialFormData = (sim) => ({
   iccid: sim?.iccid ?? '',
   status: sim?.status ?? 'inactive',

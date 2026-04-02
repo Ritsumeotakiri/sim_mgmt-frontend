@@ -6,7 +6,7 @@ import { getInitialData } from './backendApi/initialData';
 import { createMsisdn, createMsisdnWithBranch, deleteMsisdn, importMsisdnFromExcel, updateMsisdn } from './backendApi/msisdn';
 import { sendTestNotification } from './backendApi/notification';
 import { createPlan, deletePlan, updatePlan } from './backendApi/plan';
-import { assignSale, createSim, deleteSim, getSimLifecycleHistory, importSimsFromExcel, updateSim } from './backendApi/sim';
+import { assignSale, createSim, deactivateSim, deleteSim, getSimLifecycleHistory, importSimsFromExcel, reactivateSim, updateSim } from './backendApi/sim';
 import { createUser, deleteUser, updateUser } from './backendApi/user';
 export { mapSim } from './backendApi/mappers';
 export const backendApi = {
@@ -19,6 +19,8 @@ export const backendApi = {
     getSimLifecycleHistory,
     updateSim,
     deleteSim,
+    deactivateSim,
+    reactivateSim,
     createMsisdn,
     createMsisdnWithBranch,
     importMsisdnFromExcel,

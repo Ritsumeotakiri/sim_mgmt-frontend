@@ -150,7 +150,7 @@ export function DashboardView({ stats, userRole, operatorPerformance = [], onOpe
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatsCard title="Total SIMs" value={stats.totalSIMs} icon={CreditCard} accentColor="blue"/>
         <StatsCard title="Active SIMs" value={stats.activeSIMs} icon={CheckCircle2} accentColor="green"/>
-        <StatsCard title="Pending SIMs" value={stats.pendingSIMs} icon={Clock} accentColor="amber"/>
+        <StatsCard title="Deactivated SIMs" value={stats.deactivatedSIMs ?? stats.pendingSIMs ?? 0} icon={Clock} accentColor="amber"/>
         <StatsCard title="Suspended SIMs" value={stats.suspendedSIMs} icon={AlertCircle} accentColor="red"/>
         <StatsCard title="Inactive (Stock)" value={stats.inactiveSIMs} icon={Package} accentColor="blue"/>
       </div>

@@ -634,17 +634,17 @@ export function SIMTable({ sims, userRole, userId = null, branchId = null, plans
             setCurrentPage(1);
         }}>Active</DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-            setStatusFilter('pending');
+            setStatusFilter('suspend');
             setCurrentPage(1);
-        }}>Pending</DropdownMenuItem>
+        }}>Suspend</DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-            setStatusFilter('suspended');
+            setStatusFilter('deactivate');
             setCurrentPage(1);
-        }}>Suspended</DropdownMenuItem>
+        }}>Deactivated</DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
             setStatusFilter('inactive');
             setCurrentPage(1);
-        }}>Inactive</DropdownMenuItem>
+        }}>Inactive (Stock)</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           {canManageBranch && (<select value={branchFilter} onChange={(event) => {

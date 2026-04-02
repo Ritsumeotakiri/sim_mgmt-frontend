@@ -26,7 +26,7 @@ const toneClassName = {
   neutral: 'bg-[#828282]',
 };
 
-export function Header({ title, subtitle, notifications = [], onClearNotifications, onProfileClick, onSettingsClick, onLogoutClick, canAccessSettings = false, navigationOptions = [], onNavigateFromSearch }) {
+export function Header({ title, subtitle, notifications = [], onClearNotifications, onProfileClick, onSettingsClick, onLogoutClick, canAccessSettings = false, navigationOptions = [], onNavigateFromSearch, showGlobalSearch = true }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAllNotificationsOpen, setIsAllNotificationsOpen] = useState(false);
   const previewNotifications = notifications.slice(0, 8);
@@ -49,20 +49,22 @@ export function Header({ title, subtitle, notifications = [], onClearNotificatio
 
       <div className="flex items-center gap-4">
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
-          <input type="text" placeholder="Search..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} onKeyDown={(event) => {
-            if (event.key === 'Enter' && filteredNavigationOptions.length > 0) {
-              handleNavigate(filteredNavigationOptions[0]);
-            }
-          }} className="w-64 pl-10 pr-4 py-2 bg-[#f3f3f3] border-0 rounded-lg text-sm text-[#1f1f1f] placeholder:text-[#828282] focus:outline-none focus:ring-2 focus:ring-[#1f1f1f]/10 transition-all"/>
-          {filteredNavigationOptions.length > 0 && (<div className="absolute top-full mt-2 w-full bg-white border border-[#f3f3f3] rounded-lg shadow-sm overflow-hidden z-50">
-              {filteredNavigationOptions.slice(0, 6).map((option) => (<button key={option.id} type="button" onClick={() => handleNavigate(option)} className="w-full text-left px-3 py-2 hover:bg-[#f9f9f9] transition-colors border-b border-[#f3f3f3] last:border-b-0">
-                  <p className="text-sm text-[#1f1f1f]">{option.label}</p>
-                  {option.description && <p className="text-xs text-[#828282]">{option.description}</p>}
-                </button>))}
-            </div>)}
-        </div>
+        {showGlobalSearch && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#828282]"/>
+            <input type="text" placeholder="Quick jump..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} onKeyDown={(event) => {
+              if (event.key === 'Enter' && filteredNavigationOptions.length > 0) {
+                handleNavigate(filteredNavigationOptions[0]);
+              }
+            }} className="w-64 pl-10 pr-4 py-2 bg-[#f3f3f3] border-0 rounded-lg text-sm text-[#1f1f1f] placeholder:text-[#828282] focus:outline-none focus:ring-2 focus:ring-[#1f1f1f]/10 transition-all"/>
+            {filteredNavigationOptions.length > 0 && (<div className="absolute top-full mt-2 w-full bg-white border border-[#f3f3f3] rounded-lg shadow-sm overflow-hidden z-50">
+                {filteredNavigationOptions.slice(0, 6).map((option) => (<button key={option.id} type="button" onClick={() => handleNavigate(option)} className="w-full text-left px-3 py-2 hover:bg-[#f9f9f9] transition-colors border-b border-[#f3f3f3] last:border-b-0">
+                    <p className="text-sm text-[#1f1f1f]">{option.label}</p>
+                    {option.description && <p className="text-xs text-[#828282]">{option.description}</p>}
+                  </button>))}
+              </div>)}
+          </div>
+        )}
 
         {/* Notifications */}
         <DropdownMenu>

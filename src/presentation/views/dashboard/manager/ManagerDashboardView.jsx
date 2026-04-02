@@ -27,8 +27,8 @@ export function ManagerDashboardView({ sims, msisdns, transactions, users, curre
     const stats = useMemo(() => ({
       totalSIMs: aggregateStats?.totalSIMs ?? sims.length,
       activeSIMs: aggregateStats?.activeSIMs ?? sims.filter(s => s.status === 'active').length,
-      pendingSIMs: aggregateStats?.pendingSIMs ?? sims.filter(s => s.status === 'pending').length,
-      suspendedSIMs: aggregateStats?.suspendedSIMs ?? sims.filter(s => s.status === 'suspended').length,
+      deactivatedSIMs: aggregateStats?.deactivatedSIMs ?? aggregateStats?.pendingSIMs ?? sims.filter(s => s.status === 'deactivate').length,
+      suspendedSIMs: aggregateStats?.suspendedSIMs ?? sims.filter(s => s.status === 'suspend').length,
       inactiveSIMs: aggregateStats?.inactiveSIMs ?? sims.filter(s => s.status === 'inactive').length,
       totalMSISDNs: aggregateStats?.totalMSISDNs ?? msisdns.length,
       availableMSISDNs: aggregateStats?.availableMSISDNs ?? msisdns.filter(m => m.status === 'available').length,
@@ -79,7 +79,7 @@ export function ManagerDashboardView({ sims, msisdns, transactions, users, curre
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatsCard title="Total SIMs" value={stats.totalSIMs} icon={CreditCard} accentColor="blue"/>
         <StatsCard title="Active SIMs" value={stats.activeSIMs} icon={CheckCircle2} accentColor="green"/>
-        <StatsCard title="Pending" value={stats.pendingSIMs} icon={Clock} accentColor="amber"/>
+        <StatsCard title="Deactivated" value={stats.deactivatedSIMs} icon={Clock} accentColor="amber"/>
         <StatsCard title="Suspended" value={stats.suspendedSIMs} icon={AlertCircle} accentColor="red"/>
         <StatsCard title="In Stock" value={stats.inactiveSIMs} icon={Package} accentColor="blue"/>
       </div>

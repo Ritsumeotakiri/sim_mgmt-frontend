@@ -47,6 +47,7 @@ function App() {
     const location = useLocation();
     const simManagement = useSIMManagementViewModel({
         userName: auth.userName,
+        userId: auth.userId,
         isAuthenticated: auth.isAuthenticated,
         authToken: auth.token,
         userRole: auth.userRole,
@@ -142,16 +143,16 @@ function App() {
             };
         });
 
-        const pendingSimNotifications = simManagement.sims
-            .filter((sim) => sim.status === 'pending')
+        const deactivatedSimNotifications = simManagement.sims
+            .filter((sim) => sim.status === 'deactivate')
             .map((sim) => ({
             id: `sim-${sim.id}`,
-            message: `SIM ${sim.iccid || sim.id} pending activation`,
+            message: `SIM ${sim.iccid || sim.id} deactivated`,
             timestamp: sim.updatedAt || sim.createdAt || new Date(0),
             tone: 'warning',
         }));
 
-        return [...transactionNotifications, ...pendingSimNotifications]
+        return [...transactionNotifications, ...deactivatedSimNotifications]
             .sort((first, second) => new Date(second.timestamp).getTime() - new Date(first.timestamp).getTime())
             .filter((notification) => {
             if (!notificationsClearedAt) {
@@ -254,6 +255,7 @@ function App() {
                                         operatorPerformance={simManagement.operatorPerformance}
                                         currentUserIdentifier={auth.userEmail || ''}
                                         onSellSIM={simManagement.completeSale}
+                                        onReactivateSIM={simManagement.completeReactivation}
                                         onAddCustomer={simManagement.handleAddCustomer}
                                         userId={auth.userId}
                                         branchId={auth.userBranchId}
@@ -338,10 +340,12 @@ function App() {
                 {(userRole === 'admin' || userRole === 'operator') && (<SellSIMModal isOpen={simManagement.isSellModalOpen} onClose={() => {
                                         simManagement.setIsSellModalOpen(false);
                                         simManagement.setSellingSIM(null);
-                                }} onSell={simManagement.completeSale} sim={simManagement.sellingSIM} availableMSISDNs={simManagement.availableMSISDNs} customers={simManagement.customers} plans={simManagement.plans}/>)}
+                        }} onSell={simManagement.completeSale} onReactivate={simManagement.completeReactivation} sim={simManagement.sellingSIM} availableMSISDNs={simManagement.availableMSISDNs} customers={simManagement.customers} plans={simManagement.plans} lockedCustomer={simManagement.sellingSIM?.lockedCustomer || null} />) }
             </>);
 
-        const loadingFallback = <div className="p-6 text-sm text-[#828282]">Loading...</div>;
+        const loadingFallback = (<div className="min-h-screen px-6 text-sm text-[#828282] flex items-center justify-center">
+            Loading...
+        </div>);
 
         return (<>
             <Toaster position="top-right" richColors/>

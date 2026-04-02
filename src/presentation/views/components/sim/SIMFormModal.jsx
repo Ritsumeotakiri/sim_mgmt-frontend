@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/presentation/compone
 import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequestWithMeta } from '@/data/services/backendApi/client';
 import { ScanIccidDialog } from '@/presentation/components/ScanIccidDialog';
-const statuses = ['active', 'pending', 'suspended', 'inactive'];
-const batchStatuses = ['inactive', 'active', 'suspended', 'blocked'];
+const statuses = ['active', 'inactive', 'suspend', 'deactivate'];
+const batchStatuses = ['inactive', 'active', 'suspend', 'deactivate'];
 export function SIMFormModal({ isOpen, onClose, onSave, onBatchImport, sim }) {
     const [formData, setFormData] = useState({
         iccid: '',
