@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/presentation/components/ui/dialog';
 import { Search, Filter, ChevronLeft, ChevronRight, ArrowRightLeft, Power, Ban, ShoppingCart, User, Phone, CreditCard, Wallet, RotateCcw, Activity } from 'lucide-react';
 import { StatusBadge } from '../common/StatusBadge';
@@ -46,6 +46,8 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilterMode, setDateFilterMode] = useState('today');
+  const [dateFilter, setDateFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [serverTransactions, setServerTransactions] = useState([]);
   const [serverPagination, setServerPagination] = useState({ currentPage: 1, pageSize: 10, totalPages: 1, totalRecords: 0 });
@@ -66,6 +68,76 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
   const [draggedColumn, setDraggedColumn] = useState(null);
   const [dropTargetColumn, setDropTargetColumn] = useState(null);
   const itemsPerPage = 10;
+  const getLocalDateString = (dateValue) => {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const todayDate = useMemo(() => getLocalDateString(new Date()), []);
+
+  const startOfWeek = (dateValue) => {
+    const date = new Date(dateValue);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const startOfMonth = (dateValue) => {
+    const date = new Date(dateValue);
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const resolveDateRange = (mode, customDate) => {
+    if (mode === 'all') {
+      return { start: null, end: null, single: '' };
+    }
+    if (mode === 'custom') {
+      return { start: null, end: null, single: customDate || todayDate };
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (mode === 'week') {
+      return { start: startOfWeek(today), end: today, single: '' };
+    }
+    if (mode === 'month') {
+      return { start: startOfMonth(today), end: today, single: '' };
+    }
+    return { start: today, end: today, single: todayDate };
+  };
+
+  const matchesDateFilter = (value, range) => {
+    if (!range || (!range.single && !range.start && !range.end)) {
+      return true;
+    }
+    if (!value) {
+      return false;
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return false;
+    }
+    parsed.setHours(0, 0, 0, 0);
+    if (range.single) {
+      return getLocalDateString(parsed) === range.single;
+    }
+    if (range.start && parsed < range.start) {
+      return false;
+    }
+    if (range.end && parsed > range.end) {
+      return false;
+    }
+    return true;
+  };
+  const dateRange = useMemo(() => resolveDateRange(dateFilterMode, dateFilter), [dateFilterMode, dateFilter, todayDate]);
 
   useEffect(() => {
     const loadTransactions = async () => {
@@ -86,6 +158,16 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
         if (statusFilter !== 'all') {
           params.set('status', statusFilter);
         }
+        if (dateRange.single) {
+          params.set('date', dateRange.single);
+        } else if (dateRange.start || dateRange.end) {
+          if (dateRange.start) {
+            params.set('startDate', getLocalDateString(dateRange.start));
+          }
+          if (dateRange.end) {
+            params.set('endDate', getLocalDateString(dateRange.end));
+          }
+        }
         const response = await apiRequestWithMeta(`${ENDPOINTS.transactions.list}?${params.toString()}`);
         if (requestId !== transactionsRequestRef.current) {
           return;
@@ -104,7 +186,7 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
       }
     };
     loadTransactions();
-  }, [currentPage, searchTerm, statusFilter, typeFilter, useServerPagination]);
+  }, [currentPage, searchTerm, statusFilter, typeFilter, useServerPagination, dateFilterMode, dateFilter, todayDate]);
 
   const sourceTransactions = useServerPagination ? serverTransactions : transactions;
   const availableTypes = Array.from(new Set(sourceTransactions.map((transaction) => transaction.type).filter(Boolean))).sort((a, b) => a.localeCompare(b));
@@ -120,7 +202,8 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
       (transaction.notes && transaction.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = typeFilter === 'all' || transaction.type === typeFilter;
     const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
+    const matchesDate = matchesDateFilter(transaction.date, dateRange);
+    return matchesSearch && matchesType && matchesStatus && matchesDate;
   });
 
   const totalPages = disablePagination
@@ -149,7 +232,13 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, typeFilter, statusFilter]);
+  }, [searchTerm, typeFilter, statusFilter, dateFilter, dateFilterMode]);
+
+  useEffect(() => {
+    if (!dateFilter) {
+      setDateFilter(todayDate);
+    }
+  }, [dateFilter, todayDate]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -351,6 +440,28 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
               <DropdownMenuItem onClick={() => setStatusFilter('failed')}>Failed</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <select
+              className="h-9 rounded-md border border-[#c9c7c7] bg-white px-2 text-sm"
+              value={dateFilterMode}
+              onChange={(event) => setDateFilterMode(event.target.value)}
+            >
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="custom">Date</option>
+              <option value="all">All</option>
+            </select>
+            <input
+              type="date"
+              className="h-9 rounded-md border border-[#c9c7c7] bg-white px-2 text-sm"
+              value={dateFilter}
+              onChange={(event) => {
+                setDateFilterMode('custom');
+                setDateFilter(event.target.value);
+              }}
+            />
+          </div>
         </div>
       </div>
 

@@ -16,9 +16,7 @@ export const SimProfileTabView = ({
   selectedCustomerInsight,
   plans,
   selectedSimTransactions,
-  paginatedSimTransactions,
   setSimTxPage,
-  simTxTotalPages,
   safeSimTxPage,
   setActiveTab,
   refreshData,
@@ -36,19 +34,128 @@ export const SimProfileTabView = ({
   const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
   const [isDeactivating, setIsDeactivating] = useState(false);
   const [simActivityPage, setSimActivityPage] = useState(1);
+  const [simTxDateFilter, setSimTxDateFilter] = useState('');
+  const [simLifecycleDateFilter, setSimLifecycleDateFilter] = useState('');
+  const [simTxFilterMode, setSimTxFilterMode] = useState('today');
+  const [simLifecycleFilterMode, setSimLifecycleFilterMode] = useState('today');
 
   const SIM_ACTIVITY_PAGE_SIZE = 5;
-  const simActivityTotalPages = Math.max(1, Math.ceil(selectedSimLifecycle.length / SIM_ACTIVITY_PAGE_SIZE));
-  const safeSimActivityPage = Math.min(simActivityPage, simActivityTotalPages);
-  const simActivityStartIndex = (safeSimActivityPage - 1) * SIM_ACTIVITY_PAGE_SIZE;
-  const paginatedSimLifecycle = selectedSimLifecycle.slice(
-    simActivityStartIndex,
-    simActivityStartIndex + SIM_ACTIVITY_PAGE_SIZE
+  const getLocalDateString = (dateValue) => {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const todayDate = getLocalDateString(new Date());
+
+  const startOfWeek = (dateValue) => {
+    const date = new Date(dateValue);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const startOfMonth = (dateValue) => {
+    const date = new Date(dateValue);
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const resolveDateRange = (mode, customDate) => {
+    if (mode === 'all') {
+      return { start: null, end: null, single: '' };
+    }
+    if (mode === 'custom') {
+      return { start: null, end: null, single: customDate || todayDate };
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (mode === 'week') {
+      return { start: startOfWeek(today), end: today, single: '' };
+    }
+    if (mode === 'month') {
+      return { start: startOfMonth(today), end: today, single: '' };
+    }
+    return { start: today, end: today, single: todayDate };
+  };
+
+  const simTxDateRange = resolveDateRange(simTxFilterMode, simTxDateFilter);
+  const simLifecycleDateRange = resolveDateRange(simLifecycleFilterMode, simLifecycleDateFilter);
+
+  const matchesDateFilter = (value, range) => {
+    if (!range || (!range.single && !range.start && !range.end)) {
+      return true;
+    }
+    if (!value) {
+      return false;
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return false;
+    }
+    parsed.setHours(0, 0, 0, 0);
+    if (range.single) {
+      return getLocalDateString(parsed) === range.single;
+    }
+    if (range.start && parsed < range.start) {
+      return false;
+    }
+    if (range.end && parsed > range.end) {
+      return false;
+    }
+    return true;
+  };
+
+  const filteredSimTransactions = selectedSimTransactions.filter((transaction) =>
+    matchesDateFilter(transaction.date, simTxDateRange)
+  );
+
+  const filteredSimLifecycle = selectedSimLifecycle.filter((event) =>
+    matchesDateFilter(event.event_date, simLifecycleDateRange)
+  );
+
+  const filteredSimTxTotalPages = Math.max(1, Math.ceil(filteredSimTransactions.length / SIM_TX_PAGE_SIZE));
+  const safeFilteredSimTxPage = Math.min(safeSimTxPage, filteredSimTxTotalPages);
+  const paginatedFilteredSimTransactions = filteredSimTransactions.slice(
+    (safeFilteredSimTxPage - 1) * SIM_TX_PAGE_SIZE,
+    safeFilteredSimTxPage * SIM_TX_PAGE_SIZE
+  );
+
+  const filteredSimLifecycleTotalPages = Math.max(1, Math.ceil(filteredSimLifecycle.length / SIM_ACTIVITY_PAGE_SIZE));
+  const safeFilteredSimLifecyclePage = Math.min(simActivityPage, filteredSimLifecycleTotalPages);
+  const simLifecycleStartIndex = (safeFilteredSimLifecyclePage - 1) * SIM_ACTIVITY_PAGE_SIZE;
+  const paginatedSimLifecycle = filteredSimLifecycle.slice(
+    simLifecycleStartIndex,
+    simLifecycleStartIndex + SIM_ACTIVITY_PAGE_SIZE
   );
 
   useEffect(() => {
     setSimActivityPage(1);
   }, [selectedCustomerSim?.id, selectedSimLifecycle.length]);
+
+  useEffect(() => {
+    if (!simTxDateFilter) {
+      setSimTxDateFilter(todayDate);
+    }
+    if (!simLifecycleDateFilter) {
+      setSimLifecycleDateFilter(todayDate);
+    }
+  }, [todayDate, simTxDateFilter, simLifecycleDateFilter]);
+
+  useEffect(() => {
+    setSimTxPage(1);
+  }, [simTxDateFilter, simTxFilterMode, setSimTxPage]);
+
+  useEffect(() => {
+    setSimActivityPage(1);
+  }, [simLifecycleDateFilter, simLifecycleFilterMode]);
 
   const customerId = selectedCustomerInsight?.customer?.id || selectedCustomerSim?.customerId;
   const isReactivatable = ['inactive', 'deactivate'].includes(String(selectedCustomerSim?.status || '').toLowerCase());
@@ -272,12 +379,36 @@ export const SimProfileTabView = ({
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div>
-            <h4 className="text-sm font-semibold text-[#1f1f1f] mb-2">SIM Transactions</h4>
-            {selectedSimTransactions.length === 0 ? (
-              <p className="text-sm text-[#828282]">No transactions found for this SIM.</p>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <h4 className="text-sm font-semibold text-[#1f1f1f]">SIM Transactions</h4>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  className="h-8 rounded-md border border-[#f3f3f3] bg-white px-2 text-sm"
+                  value={simTxFilterMode}
+                  onChange={(event) => setSimTxFilterMode(event.target.value)}
+                >
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  {/* <option value="custom">Date</option> */}
+                  <option value="all">All</option>
+                </select>
+                <Input
+                  type="date"
+                  className="h-8"
+                  value={simTxDateFilter}
+                  onChange={(event) => {
+                    setSimTxFilterMode('custom');
+                    setSimTxDateFilter(event.target.value);
+                  }}
+                />
+              </div>
+            </div>
+            {filteredSimTransactions.length === 0 ? (
+              <p className="text-sm text-[#828282]">No transactions found for this filter.</p>
             ) : (
               <div className="space-y-2">
-                {paginatedSimTransactions.map((transaction) => (
+                {paginatedFilteredSimTransactions.map((transaction) => (
                   <div key={`sim-tx-${transaction.id}`} className="rounded-md border border-[#f3f3f3] p-2">
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-sm text-[#1f1f1f] capitalize">{String(transaction.type || 'transaction').replace(/_/g, ' ')} ({transaction.status || 'unknown'})</p>
@@ -286,14 +417,14 @@ export const SimProfileTabView = ({
                     <p className="text-xs text-[#828282] mt-1">By: {transaction.userName || 'System'}</p>
                   </div>
                 ))}
-                {selectedSimTransactions.length > SIM_TX_PAGE_SIZE && (
+                {filteredSimTransactions.length > SIM_TX_PAGE_SIZE && (
                   <div className="flex items-center justify-between gap-2 pt-1">
-                    <p className="text-xs text-[#828282]">Page {safeSimTxPage} of {simTxTotalPages}</p>
+                    <p className="text-xs text-[#828282]">Page {safeFilteredSimTxPage} of {filteredSimTxTotalPages}</p>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimTxPage((previous) => Math.max(1, previous - 1))} disabled={safeSimTxPage <= 1}>
+                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimTxPage((previous) => Math.max(1, previous - 1))} disabled={safeFilteredSimTxPage <= 1}>
                         <ChevronLeft className="w-4 h-4"/>
                       </Button>
-                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimTxPage((previous) => Math.min(simTxTotalPages, previous + 1))} disabled={safeSimTxPage >= simTxTotalPages}>
+                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimTxPage((previous) => Math.min(filteredSimTxTotalPages, previous + 1))} disabled={safeFilteredSimTxPage >= filteredSimTxTotalPages}>
                         <ChevronRight className="w-4 h-4"/>
                       </Button>
                     </div>
@@ -304,11 +435,35 @@ export const SimProfileTabView = ({
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-[#1f1f1f] mb-2">SIM Activity</h4>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <h4 className="text-sm font-semibold text-[#1f1f1f]">SIM Activity</h4>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  className="h-8 rounded-md border border-[#f3f3f3] bg-white px-2 text-sm"
+                  value={simLifecycleFilterMode}
+                  onChange={(event) => setSimLifecycleFilterMode(event.target.value)}
+                >
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  {/* <option value="custom">Date</option> */}
+                  <option value="all">All</option>
+                </select>
+                <Input
+                  type="date"
+                  className="h-8"
+                  value={simLifecycleDateFilter}
+                  onChange={(event) => {
+                    setSimLifecycleFilterMode('custom');
+                    setSimLifecycleDateFilter(event.target.value);
+                  }}
+                />
+              </div>
+            </div>
             {isSimLifecycleLoading ? (
               <p className="text-sm text-[#828282]">Loading activity...</p>
-            ) : selectedSimLifecycle.length === 0 ? (
-              <p className="text-sm text-[#828282]">No lifecycle events found for this SIM.</p>
+            ) : filteredSimLifecycle.length === 0 ? (
+              <p className="text-sm text-[#828282]">No lifecycle events found for this filter.</p>
             ) : (
               <div className="space-y-2">
                 {paginatedSimLifecycle.map((event, index) => (
@@ -320,14 +475,14 @@ export const SimProfileTabView = ({
                     {event.details && <p className="text-xs text-[#828282] mt-1">{event.details}</p>}
                   </div>
                 ))}
-                {selectedSimLifecycle.length > SIM_ACTIVITY_PAGE_SIZE && (
+                {filteredSimLifecycle.length > SIM_ACTIVITY_PAGE_SIZE && (
                   <div className="flex items-center justify-between gap-2 pt-1">
-                    <p className="text-xs text-[#828282]">Page {safeSimActivityPage} of {simActivityTotalPages}</p>
+                    <p className="text-xs text-[#828282]">Page {safeFilteredSimLifecyclePage} of {filteredSimLifecycleTotalPages}</p>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimActivityPage((previous) => Math.max(1, previous - 1))} disabled={safeSimActivityPage <= 1}>
+                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimActivityPage((previous) => Math.max(1, previous - 1))} disabled={safeFilteredSimLifecyclePage <= 1}>
                         <ChevronLeft className="w-4 h-4"/>
                       </Button>
-                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimActivityPage((previous) => Math.min(simActivityTotalPages, previous + 1))} disabled={safeSimActivityPage >= simActivityTotalPages}>
+                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setSimActivityPage((previous) => Math.min(filteredSimLifecycleTotalPages, previous + 1))} disabled={safeFilteredSimLifecyclePage >= filteredSimLifecycleTotalPages}>
                         <ChevronRight className="w-4 h-4"/>
                       </Button>
                     </div>

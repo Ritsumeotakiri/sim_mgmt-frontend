@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Mail, Phone, ShieldCheck, Smartphone, CreditCard, Activity, Clock3, PlusCircle } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
 import { BackButton } from '@/presentation/views/components/common/BackButton';
@@ -14,13 +14,11 @@ import { addBalanceToSim, assignPlanToSim } from '@/data/services/backendApi/sim
 export const CustomerProfileTab = ({
   selectedCustomerInsight,
   paginatedCustomerSims,
-  paginatedTimeline,
   selectedCustomerTimeline,
   setCustomerSimsPage,
   customerSimsTotalPages,
   safeCustomerSimsPage,
   setTimelinePage,
-  timelineTotalPages,
   safeTimelinePage,
   plans,
   setSelectedCustomerSim,
@@ -39,6 +37,101 @@ export const CustomerProfileTab = ({
   const [selectedSimForPlan, setSelectedSimForPlan] = useState(null);
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [isChangingPlan, setIsChangingPlan] = useState(false);
+  const [timelineDateFilter, setTimelineDateFilter] = useState('');
+  const [timelineFilterMode, setTimelineFilterMode] = useState('today');
+
+  const getLocalDateString = (dateValue) => {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const todayDate = getLocalDateString(new Date());
+
+  const startOfWeek = (dateValue) => {
+    const date = new Date(dateValue);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const startOfMonth = (dateValue) => {
+    const date = new Date(dateValue);
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const resolveDateRange = (mode, customDate) => {
+    if (mode === 'all') {
+      return { start: null, end: null, single: '' };
+    }
+    if (mode === 'custom') {
+      return { start: null, end: null, single: customDate || todayDate };
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (mode === 'week') {
+      return { start: startOfWeek(today), end: today, single: '' };
+    }
+    if (mode === 'month') {
+      return { start: startOfMonth(today), end: today, single: '' };
+    }
+    return { start: today, end: today, single: todayDate };
+  };
+
+  const timelineDateRange = resolveDateRange(timelineFilterMode, timelineDateFilter);
+
+  const matchesDateFilter = (value, range) => {
+    if (!range || (!range.single && !range.start && !range.end)) {
+      return true;
+    }
+    if (!value) {
+      return false;
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return false;
+    }
+    parsed.setHours(0, 0, 0, 0);
+    if (range.single) {
+      return getLocalDateString(parsed) === range.single;
+    }
+    if (range.start && parsed < range.start) {
+      return false;
+    }
+    if (range.end && parsed > range.end) {
+      return false;
+    }
+    return true;
+  };
+
+  const filteredTimeline = selectedCustomerTimeline.filter((entry) =>
+    matchesDateFilter(entry.date, timelineDateRange)
+  );
+
+  const filteredTimelineTotalPages = Math.max(1, Math.ceil(filteredTimeline.length / TIMELINE_PAGE_SIZE));
+  const safeFilteredTimelinePage = Math.min(safeTimelinePage, filteredTimelineTotalPages);
+  const paginatedFilteredTimeline = filteredTimeline.slice(
+    (safeFilteredTimelinePage - 1) * TIMELINE_PAGE_SIZE,
+    safeFilteredTimelinePage * TIMELINE_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (!timelineDateFilter) {
+      setTimelineDateFilter(todayDate);
+    }
+  }, [todayDate, timelineDateFilter]);
+
+  useEffect(() => {
+    setTimelinePage(1);
+  }, [timelineDateFilter, timelineFilterMode, setTimelinePage]);
 
   if (!selectedCustomerInsight) {
     return (
@@ -325,23 +418,47 @@ export const CustomerProfileTab = ({
           </div>
 
           <div className="rounded-2xl border border-[#ececec] bg-white p-4 shadow-sm sm:p-5">
-            <div className="mb-4">
-              <h4 className="text-base font-semibold text-[#1f1f1f]">Timeline</h4>
-              <p className="text-sm text-[#828282]">A recent view of customer lifecycle events.</p>
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h4 className="text-base font-semibold text-[#1f1f1f]">Timeline</h4>
+                <p className="text-sm text-[#828282]">A recent view of customer lifecycle events.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  className="h-8 rounded-md border border-[#f3f3f3] bg-white px-2 text-sm"
+                  value={timelineFilterMode}
+                  onChange={(event) => setTimelineFilterMode(event.target.value)}
+                >
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="custom">Date</option>
+                  <option value="all">All</option>
+                </select>
+                <Input
+                  type="date"
+                  className="h-8"
+                  value={timelineDateFilter}
+                  onChange={(event) => {
+                    setTimelineFilterMode('custom');
+                    setTimelineDateFilter(event.target.value);
+                  }}
+                />
+              </div>
             </div>
-            {selectedCustomerTimeline.length === 0 ? (
+            {filteredTimeline.length === 0 ? (
               <div className="rounded-xl border border-dashed border-[#dcdcdc] bg-[#fafafa] p-6 text-center text-sm text-[#828282]">
-                No history yet.
+                No history found for this filter.
               </div>
             ) : (
               <div className="space-y-3">
-                {paginatedTimeline.map((entry, index) => (
+                {paginatedFilteredTimeline.map((entry, index) => (
                   <div key={entry.id} className="relative flex items-start gap-3 rounded-2xl border border-[#f1f1f1] bg-[#fcfcfc] p-3.5">
                     <div className="relative flex flex-col items-center">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1f1f1f]/6 text-[#1f1f1f]">
                         <Clock3 className="h-4 w-4"/>
                       </div>
-                      {index < paginatedTimeline.length - 1 && <div className="mt-2 h-8 w-px bg-[#e8e8e8]" />}
+                      {index < paginatedFilteredTimeline.length - 1 && <div className="mt-2 h-8 w-px bg-[#e8e8e8]" />}
                     </div>
                     <div className="min-w-0 flex-1">
                       {(() => {
@@ -365,14 +482,14 @@ export const CustomerProfileTab = ({
                     </div>
                   </div>
                 ))}
-                {selectedCustomerTimeline.length > TIMELINE_PAGE_SIZE && (
+                {filteredTimeline.length > TIMELINE_PAGE_SIZE && (
                   <div className="flex items-center justify-between gap-2 border-t border-[#f3f3f3] pt-3">
-                    <p className="text-xs text-[#828282]">Page {safeTimelinePage} of {timelineTotalPages}</p>
+                    <p className="text-xs text-[#828282]">Page {safeFilteredTimelinePage} of {filteredTimelineTotalPages}</p>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setTimelinePage((previous) => Math.max(1, previous - 1))} disabled={safeTimelinePage <= 1}>
+                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setTimelinePage((previous) => Math.max(1, previous - 1))} disabled={safeFilteredTimelinePage <= 1}>
                         <ChevronLeft className="w-4 h-4"/>
                       </Button>
-                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setTimelinePage((previous) => Math.min(timelineTotalPages, previous + 1))} disabled={safeTimelinePage >= timelineTotalPages}>
+                      <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setTimelinePage((previous) => Math.min(filteredTimelineTotalPages, previous + 1))} disabled={safeFilteredTimelinePage >= filteredTimelineTotalPages}>
                         <ChevronRight className="w-4 h-4"/>
                       </Button>
                     </div>
