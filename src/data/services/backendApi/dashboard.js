@@ -5,3 +5,7 @@ export async function getOperatorPerformance() {
     return apiRequest(ENDPOINTS.dashboard.operatorPerformance);
 }
 
+export async function getPlanRevenue() {
+    return apiRequest(ENDPOINTS.dashboard.planRevenue);
+}
+

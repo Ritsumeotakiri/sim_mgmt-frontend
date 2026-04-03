@@ -1,3 +1,5 @@
+import { sendFrontendLog } from './logs';
+
 const API_BASE = '/api';
 const AUTH_STORAGE_KEY = 'sim-auth-session';
 const AUTH_EXPIRED_EVENT = 'sim-auth-expired';
@@ -91,14 +93,15 @@ async function executeRequest(path, init) {
     if (import.meta.env.DEV) {
         console.info(`[API] ${method} ${url}`, init?.body ? { body: init.body } : undefined);
     }
-    const response = await fetch(url, {
-        headers: {
-            ...defaultHeaders,
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...(init?.headers || {}),
-        },
-        ...init,
-    });
+    try {
+        const response = await fetch(url, {
+            headers: {
+                ...defaultHeaders,
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...(init?.headers || {}),
+            },
+            ...init,
+        });
     let payload = null;
     try {
         payload = (await response.json());
@@ -114,14 +117,30 @@ async function executeRequest(path, init) {
         notifyAuthExpired(token);
         throw createAuthExpiredError();
     }
-    if (!response.ok || payload?.success === false) {
-        const message = payload?.message || payload?.error || `Request failed: ${response.status}`;
-        if (import.meta.env.DEV) {
-            console.error(`[API] ${method} ${url} failed`, { status: response.status, payload });
+        if (!response.ok || payload?.success === false) {
+            const message = payload?.message || payload?.error || `Request failed: ${response.status}`;
+            if (import.meta.env.DEV) {
+                console.error(`[API] ${method} ${url} failed`, { status: response.status, payload });
+            }
+            void sendFrontendLog({
+                level: 'error',
+                message: `[API] ${method} ${url} failed`,
+                meta: { status: response.status, payload },
+            });
+            throw new Error(message);
         }
-        throw new Error(message);
+        return payload;
+    } catch (error) {
+        if (import.meta.env.DEV) {
+            console.error(`[API] ${method} ${url} error`, error);
+        }
+        void sendFrontendLog({
+            level: 'error',
+            message: `[API] ${method} ${url} error`,
+            meta: { error: error?.message || String(error) },
+        });
+        throw error;
     }
-    return payload;
 }
 
 export async function apiRequest(path, init) {

@@ -284,7 +284,7 @@ export function CustomersTable({ customers, transactions = [], sims = [], plans 
     const customerSims = selectedCustomer
       ? sims.filter((sim) => sim.customerId === selectedCustomer.id || sim.assignedTo === selectedCustomer.name)
       : [];
-    const paymentTransactions = customerTransactions.filter((transaction) => ['sale', 'top_up', 'refund'].includes(String(transaction.type || '').toLowerCase()));
+    const paymentTransactions = customerTransactions.filter((transaction) => ['sale', 'top_up', 'refund', 'charge_plan'].includes(String(transaction.type || '').toLowerCase()));
     const timelineEntries = selectedCustomer ? [
       {
         id: 'created',

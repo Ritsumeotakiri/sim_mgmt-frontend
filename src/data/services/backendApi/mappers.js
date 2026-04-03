@@ -169,12 +169,15 @@ export function mapMsisdn(item) {
 export function mapPlan(item) {
     const id = item.id ?? item.plan_id;
     const durationDays = Number(item.duration_days) || 0;
+    const durationMinutes = Math.round(durationDays * 1440);
     const rawDataLimit = String(item.data_limit || '').trim();
     const dataLimit = rawDataLimit.length > 0 ? rawDataLimit : 'unlimited';
     return {
         id: id ? String(id) : '',
         name: item.name,
-        description: `${durationDays} day plan`,
+        description: durationDays > 0 && durationDays < 1
+            ? `${durationMinutes} min plan`
+            : `${durationDays} day plan`,
         price: Number(item.price) || 0,
         durationDays,
         dataLimit,

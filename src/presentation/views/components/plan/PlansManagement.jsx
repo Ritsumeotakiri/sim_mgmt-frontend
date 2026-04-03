@@ -247,7 +247,8 @@ export function PlansManagement({ plans, canEdit = false, onAdd, onEdit, onDelet
             </div>
             <div className="space-y-2">
               <Label>Duration (days)</Label>
-              <Input type="number" min="1" step="1" value={formData.durationDays} onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}/>
+              <Input type="number" min="0.000694444" step="0.0000001" value={formData.durationDays} onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}/>
+              <p className="text-xs text-[#828282]">Tip: 1 minute = 0.000694444 days.</p>
             </div>
             <div className="space-y-2">
               <Label>Data Allowance</Label>
@@ -278,7 +279,8 @@ export function PlansManagement({ plans, canEdit = false, onAdd, onEdit, onDelet
             </div>
             <div className="space-y-2">
               <Label>Duration (days)</Label>
-              <Input type="number" min="1" step="1" value={formData.durationDays} onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}/>
+              <Input type="number" min="0.000694444" step="0.0000001" value={formData.durationDays} onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}/>
+              <p className="text-xs text-[#828282]">Tip: 1 minute = 0.000694444 days.</p>
             </div>
             <div className="space-y-2">
               <Label>Data Allowance</Label>

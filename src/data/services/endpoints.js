@@ -49,8 +49,13 @@ export const ENDPOINTS = {
     settings: {
         list: '/settings',
         byName: (name) => `/settings/${name}`,
+        alertThresholds: (branchId) => `/settings/alert-thresholds/${branchId}`,
     },
     dashboard: {
         operatorPerformance: '/dashboard/operator-performance',
+        planRevenue: '/dashboard/plan-revenue',
+    },
+    logs: {
+        frontend: '/logs/frontend',
     },
 };

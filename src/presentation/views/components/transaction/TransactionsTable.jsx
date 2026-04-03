@@ -16,6 +16,7 @@ const transactionIcons = {
   sale: ShoppingCart,
   top_up: Wallet,
   refund: RotateCcw,
+  charge_plan: CreditCard,
 };
 
 const transactionColors = {
@@ -26,6 +27,7 @@ const transactionColors = {
   sale: 'text-[#3ebb7f] bg-[#3ebb7f]/10',
   top_up: 'text-[#5b93ff] bg-[#5b93ff]/10',
   refund: 'text-[#e9423a] bg-[#e9423a]/10',
+  charge_plan: 'text-[#5b93ff] bg-[#5b93ff]/10',
 };
 
 const DEFAULT_COLUMN_ORDER = ['transaction', 'iccid', 'msisdn', 'customer', 'plan', 'date', 'user', 'status'];
