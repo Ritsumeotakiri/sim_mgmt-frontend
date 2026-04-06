@@ -240,9 +240,6 @@ export const CustomerProfileTab = ({
       setIsChangingPlan(false);
     }
   };
-
-  console.log('userId:', userId, 'branchId:', branchId);
-
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -250,55 +247,40 @@ export const CustomerProfileTab = ({
       </div>
 
       <div className="space-y-5">
-        <div className="overflow-hidden rounded-2xl border border-[#ececec] bg-white shadow-sm">
-          <div className="h-28 border-b border-[#f1f1f1] bg-[#fafafa]" />
-          <div className="relative px-5 pb-5 sm:px-6 sm:pb-6">
-            <div className="-mt-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="flex items-start gap-4">
-                <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(customer.name || customer.id || 'customer')}`}
-                  alt={customer.name || 'Customer'}
-                  className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white bg-white shadow-sm object-cover"
-                />
-                <div className="space-y-3 pt-10 sm:pt-9">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#828282]">Customer Profile</p>
-                    <h3 className="text-2xl font-semibold leading-tight text-[#1f1f1f]">{customer.name}</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-sm text-[#5f5f5f]">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-[#ededed] bg-[#fafafa] px-3 py-1.5">
-                      <Mail className="h-4 w-4 text-[#828282]"/>
-                      {customer.email || 'No email'}
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-[#ededed] bg-[#fafafa] px-3 py-1.5">
-                      <Phone className="h-4 w-4 text-[#828282]"/>
-                      {customer.phone || 'No phone'}
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-[#ededed] bg-[#fafafa] px-3 py-1.5">
-                      <ShieldCheck className="h-4 w-4 text-[#828282]"/>
-                      ID {customer.idNumber || 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  className="h-10 rounded-xl px-4 bg-[#3ebb7f] hover:bg-[#3ebb7f]/90 text-white shadow-sm lg:self-center" 
-                  onClick={() => {
-                    setSellingSIM({
-                      customerBuyFlow: true,
-                      lockedCustomer: customer,
-                    });
-                    setIsSellModalOpen(true);
-                  }}
-                >
-                  <Smartphone className="mr-2 h-4 w-4"/>
-                  Buy SIM
-                </Button>
-              </div>
+        <div className="rounded-2xl border border-[#ececec] bg-white shadow-sm px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#828282]">Customer Profile</p>
+            <h3 className="text-2xl font-semibold leading-tight text-[#1f1f1f]">{customer.name}</h3>
+            <div className="flex flex-wrap gap-2 text-sm text-[#5f5f5f] mt-1">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#ededed] bg-[#fafafa] px-3 py-1.5">
+                <Mail className="h-4 w-4 text-[#828282]"/>
+                {customer.email || 'No email'}
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#ededed] bg-[#fafafa] px-3 py-1.5">
+                <Phone className="h-4 w-4 text-[#828282]"/>
+                {customer.phone || 'No phone'}
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#ededed] bg-[#fafafa] px-3 py-1.5">
+                <ShieldCheck className="h-4 w-4 text-[#828282]"/>
+                ID {customer.idNumber || 'N/A'}
+              </span>
             </div>
+          </div>
+          <div className="flex gap-2 md:items-center md:justify-end">
+            <Button 
+              size="sm" 
+              className="h-10 rounded-xl px-4 bg-[#3ebb7f] hover:bg-[#3ebb7f]/90 text-white shadow-sm" 
+              onClick={() => {
+                setSellingSIM({
+                  customerBuyFlow: true,
+                  lockedCustomer: customer,
+                });
+                setIsSellModalOpen(true);
+              }}
+            >
+              <Smartphone className="mr-2 h-4 w-4"/>
+              Buy SIM
+            </Button>
           </div>
         </div>
 
@@ -432,7 +414,7 @@ export const CustomerProfileTab = ({
                   <option value="today">Today</option>
                   <option value="week">This Week</option>
                   <option value="month">This Month</option>
-                  <option value="custom">Date</option>
+                  {/* <option value="custom">Date</option> */}
                   <option value="all">All</option>
                 </select>
                 <Input

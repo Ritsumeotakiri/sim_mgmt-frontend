@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import { Search, Bell, } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/presentation/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/presentation/components/ui/dialog';
@@ -26,7 +26,7 @@ const toneClassName = {
   neutral: 'bg-[#828282]',
 };
 
-export function Header({ title, subtitle, notifications = [], onClearNotifications, onProfileClick, onSettingsClick, onLogoutClick, canAccessSettings = false, navigationOptions = [], onNavigateFromSearch, showGlobalSearch = true }) {
+export function Header({ title, subtitle, notifications = [], onClearNotifications,  navigationOptions = [], onNavigateFromSearch, showGlobalSearch = true }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAllNotificationsOpen, setIsAllNotificationsOpen] = useState(false);
   const previewNotifications = notifications.slice(0, 8);
@@ -100,23 +100,7 @@ export function Header({ title, subtitle, notifications = [], onClearNotificatio
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 hover:bg-[#f3f3f3]">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="User" className="w-8 h-8 rounded-full bg-[#f3f3f3]"/>
-              <ChevronDown className="w-4 h-4 text-[#828282]"/>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onProfileClick}>Profile</DropdownMenuItem>
-            {canAccessSettings && <DropdownMenuItem onClick={onSettingsClick}>Settings</DropdownMenuItem>}
-            <DropdownMenuItem onSelect={(event) => {
-              event.preventDefault();
-              onLogoutClick?.();
-            }} className="text-[#e9423a]">Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* User Menu removed for cleaner UI */}
       </div>
 
       <Dialog open={isAllNotificationsOpen} onOpenChange={setIsAllNotificationsOpen}>

@@ -238,7 +238,7 @@ export const FrontDeskTabView = ({
           <div className="text-sm text-[#828282] py-12 text-center">No customer matches your search.</div>
         ) : (
           <div className="divide-y divide-[#f1f1f1]">
-            {paginatedCustomers.map(({ customer, customerTransactions, activeSims }) => {
+            {paginatedCustomers.map(({ customer, /*customerTransactions*/ activeSims }) => {
               const initials = String(customer.name || 'Customer')
                 .split(' ')
                 .filter(Boolean)
@@ -265,9 +265,9 @@ export const FrontDeskTabView = ({
                       <p className="text-sm text-[#828282] truncate">{customer.email || 'No email'} • {customer.phone || 'No phone'}</p>
                     </div>
                     <div className="shrink-0 flex flex-col items-end gap-2 text-xs text-[#5f5f5f] sm:flex-row sm:items-center sm:gap-2">
-                      <span className="rounded-full bg-[#f5f5f5] px-3 py-1.5">
+                      {/* <span className="rounded-full bg-[#f5f5f5] px-3 py-1.5">
                         {customerTransactions.length} transaction(s)
-                      </span>
+                      </span> */}
                       <span className="rounded-full bg-[#eef4ff] text-[#2f4f8f] px-3 py-1.5">
                         {activeSims.length} active SIM(s)
                       </span>

@@ -91,7 +91,7 @@ async function executeRequest(path, init) {
     const isFormData = typeof FormData !== 'undefined' && init?.body instanceof FormData;
     const defaultHeaders = isFormData ? {} : { 'Content-Type': 'application/json' };
     if (import.meta.env.DEV) {
-        console.info(`[API] ${method} ${url}`, init?.body ? { body: init.body } : undefined);
+        console.info(`[API] ${method} ${url}`, { ...init, body: undefined });
     }
     try {
         const response = await fetch(url, {
@@ -110,7 +110,7 @@ async function executeRequest(path, init) {
         payload = null;
     }
     if (import.meta.env.DEV) {
-        console.info(`[API] ${method} ${url} -> ${response.status}`, payload ?? '[non-json response]');
+        console.info(`[API] ${method} ${url} response`, { status: response.status, payload });
     }
     const isUnauthorized = response.status === 401 && !path.startsWith('/auth/');
     if (isUnauthorized) {

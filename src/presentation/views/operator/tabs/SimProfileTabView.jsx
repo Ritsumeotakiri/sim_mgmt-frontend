@@ -8,6 +8,14 @@ import { addBalanceToSim, deactivateSim } from '@/data/services/backendApi/sim';
 import { BackButton } from '@/presentation/views/components/common/BackButton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDateTime } from '@/presentation/views/operator/utils/dateUtils';
+// Helper to format date with month name
+function formatDateWithMonthName(dateValue) {
+  if (!dateValue) return '';
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return '';
+  const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+  return date.toLocaleString(undefined, options);
+}
 import { SIM_TX_PAGE_SIZE } from '@/presentation/views/operator/utils/constants';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/presentation/components/ui/alert-dialog';
 
@@ -358,7 +366,20 @@ export const SimProfileTabView = ({
           </div>
           <div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-3">
             <p className="text-xs text-[#828282]">Status</p>
-            <p className="text-base font-semibold text-[#1f1f1f] capitalize">{selectedCustomerSim.status || 'unknown'}</p>
+            <span
+              className={
+                `inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ` +
+                (selectedCustomerSim.status === 'active'
+                  ? 'bg-[#e6f7ef] text-[#3ebb7f]'
+                  : selectedCustomerSim.status === 'inactive' || selectedCustomerSim.status === 'deactivate'
+                  ? 'bg-[#fdeceb] text-[#e9423a]'
+                  : selectedCustomerSim.status === 'pending'
+                  ? 'bg-[#fff7e6] text-[#f6a94c]'
+                  : 'bg-[#f3f3f3] text-[#828282]')
+              }
+            >
+              {selectedCustomerSim.status || 'unknown'}
+            </span>
           </div>
           <div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-3">
             <p className="text-xs text-[#828282]">Plan</p>
@@ -369,11 +390,11 @@ export const SimProfileTabView = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-3">
             <p className="text-xs text-[#828282]">Owner</p>
-            <p className="text-sm text-[#1f1f1f]">{selectedCustomerInsight?.customer?.name || selectedCustomerSim.assignedTo || 'N/A'}</p>
+            <p className="text-base font-semibold text-[#1f1f1f] mt-1">{selectedCustomerInsight?.customer?.name || selectedCustomerSim.assignedTo || 'N/A'}</p>
           </div>
           <div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-3">
             <p className="text-xs text-[#828282]">Created</p>
-            <p className="text-sm text-[#1f1f1f]">{formatDateTime(selectedCustomerSim.createdAt)}</p>
+              <p className="text-sm text-[#1f1f1f]">{formatDateWithMonthName(selectedCustomerSim.createdAt)}</p>
           </div>
         </div>
 

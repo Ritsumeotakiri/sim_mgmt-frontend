@@ -449,7 +449,7 @@ export function TransactionsTable({ transactions = [], useServerPagination = fal
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
-              <option value="custom">Date</option>
+              {/* <option value="custom">Date</option> */}
               <option value="all">All</option>
             </select>
             <input
