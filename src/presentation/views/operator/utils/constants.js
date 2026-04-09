@@ -1,5 +1,5 @@
 export const TAB_ORDER_STORAGE_KEY = 'operator-dashboard-tab-order-v1';
-export const DEFAULT_TAB_ORDER = ['frontdesk', 'sims', 'transactions', 'performance', 'plans'];
+export const DEFAULT_TAB_ORDER = ['frontdesk', 'sims', 'transactions', 'performance', 'plans', 'branch-management'];
 
 export const FRONTDESK_PAGE_SIZE = 6;
 export const NUMBER_POOL_PAGE_SIZE = 9;
@@ -15,4 +15,5 @@ export const TAB_LABELS = {
   plans: 'Plans',
   'customer-profile': 'Customer Profile',
   'sim-profile': 'SIM Profile',
+  'branch-management': 'Branch Management',
 };

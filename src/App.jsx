@@ -33,6 +33,7 @@ const VIEW_TO_PATH = {
     users: '/users',
     profile: '/profile',
     settings: '/settings',
+    'branch-management': '/branch-management',
 };
 
 const PATH_TO_VIEW = Object.entries(VIEW_TO_PATH).reduce((acc, [view, path]) => {
@@ -109,6 +110,10 @@ function App() {
 
         if (location.pathname.startsWith('/dashboard/branches/')) {
             return 'dashboard';
+        }
+
+        if (location.pathname.startsWith('/branch-management')) {
+            return 'branch-management';
         }
 
         return PATH_TO_VIEW[location.pathname] || 'dashboard';
@@ -218,6 +223,7 @@ function App() {
             case 'transactions': return { title: 'Transactions', subtitle: 'View all SIM transactions' };
             case 'users': return { title: 'User Management', subtitle: 'Manage system users and roles' };
             case 'settings': return { title: 'Settings', subtitle: 'Configure system settings' };
+            case 'branch-management': return { title: 'Branch Management', subtitle: 'Manage branches and performance' };
             default: return { title: 'Dashboard', subtitle: '' };
         }
     };
@@ -289,6 +295,9 @@ function App() {
         }
     };
     // ========== Render Content by View ==========
+    // Branch Management page lazy import
+    const BranchManagementView = lazy(() => import('@/presentation/views/operator/BranchManagementView'));
+
     const renderContent = () => {
         switch (currentView) {
             case 'dashboard':
@@ -342,6 +351,12 @@ function App() {
                         }
                         return success;
                     } : undefined} operatorPerformance={simManagement.operatorPerformance}/>);
+            case 'branch-management':
+                return (
+                    <Suspense fallback={<div>Loading Branch Management...</div>}>
+                        <BranchManagementView />
+                    </Suspense>
+                );
             default:
                 return renderDashboard();
         }

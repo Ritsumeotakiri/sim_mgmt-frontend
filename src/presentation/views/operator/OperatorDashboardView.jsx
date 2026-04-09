@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+
+const BranchManagementView = lazy(() => import('./BranchManagementView'));
 import { SellSIMModal } from '@/presentation/views/components/sim/SellSIMModal';
 import { TransactionsTable } from '@/presentation/views/components/transaction/TransactionsTable';
 import { useTabOrder } from '@/presentation/viewModels/operator/hooks/useTabOrder';
@@ -345,6 +347,13 @@ export function OperatorDashboardView({
 
           {activeTab === 'plans' && (
             <PlansTabView plans={plans} />
+          )}
+
+
+          {activeTab === 'branch-management' && (
+            <Suspense fallback={<div>Loading...</div>}>
+              <BranchManagementView />
+            </Suspense>
           )}
         </div>
       </div>
