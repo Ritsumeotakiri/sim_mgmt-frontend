@@ -21,7 +21,6 @@ import {
 } from '@/presentation/views/operator/utils/constants';
 import { normalizeSearchValue, computeBestMatchScore } from '@/presentation/views/operator/utils/searchUtils';
 import { useOperatorActionsViewModel } from '@/presentation/viewModels/useOperatorActionsViewModel';
-import { backendApi } from '@/data/services/backendApi';
 
 export function OperatorDashboardView({ 
   sims, 
@@ -30,7 +29,6 @@ export function OperatorDashboardView({
   plans, 
   transactions, 
   onSellSIM, 
-  onReactivateSIM,
   onAddCustomer,
   userId, // Add userId prop
   branchId // Add branchId prop
@@ -57,33 +55,8 @@ export function OperatorDashboardView({
   const [localTransactions, setLocalTransactions] = useState(transactions);
   const [selectedCustomerSim, setSelectedCustomerSim] = useState(null);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
-  const [selectedSimLifecycle, setSelectedSimLifecycle] = useState([]);
-  const [isSimLifecycleLoading, setIsSimLifecycleLoading] = useState(false);
 
   const { tabOrder, draggedTab, setDraggedTab, onDropTab } = useTabOrder();
-
-  const {
-    isRefreshing,
-    refreshData,
-    handleCompleteSale,
-    handleCompleteReactivation,
-    handleOpenQuickSale,
-    handleQuickTopUp,
-    handleQuickChangePlan,
-  } = useOperatorActionsViewModel({
-    userId,
-    branchId,
-    localSims,
-    onSellSIM,
-    onReactivateSIM,
-    selectedCustomerSim,
-    setSelectedCustomerSim,
-    setLocalCustomers,
-    setLocalSims,
-    setLocalTransactions,
-    setIsSellModalOpen,
-    setSellingSIM,
-  });
 
   useEffect(() => {
     setFrontDeskPage(1);
@@ -101,39 +74,6 @@ export function OperatorDashboardView({
   useEffect(() => {
     setSimTxPage(1);
   }, [selectedCustomerSim]);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadLifecycle = async () => {
-      if (!selectedCustomerSim?.id) {
-        setSelectedSimLifecycle([]);
-        return;
-      }
-
-      setIsSimLifecycleLoading(true);
-      try {
-        const events = await backendApi.getSimLifecycleHistory(selectedCustomerSim.id);
-        if (isActive) {
-          setSelectedSimLifecycle(Array.isArray(events) ? events : []);
-        }
-      } catch (error) {
-        if (isActive) {
-          setSelectedSimLifecycle([]);
-        }
-      } finally {
-        if (isActive) {
-          setIsSimLifecycleLoading(false);
-        }
-      }
-    };
-
-    loadLifecycle();
-
-    return () => {
-      isActive = false;
-    };
-  }, [selectedCustomerSim?.id, isRefreshing]);
 
   useEffect(() => { 
     setLocalCustomers(customers); 
@@ -154,6 +94,26 @@ export function OperatorDashboardView({
 
   const inactiveSIMs = useMemo(() => sims.filter((item) => String(item.status || '').toLowerCase() === 'inactive'), [sims]);
 
+  const {
+    refreshData,
+    handleCompleteSale,
+    handleOpenQuickSale,
+    handleQuickTopUp,
+    handleQuickChangePlan,
+  } = useOperatorActionsViewModel({
+    userId,
+    branchId,
+    localSims,
+    onSellSIM,
+    selectedCustomerSim,
+    setSelectedCustomerSim,
+    setLocalCustomers,
+    setLocalSims,
+    setLocalTransactions,
+    setIsSellModalOpen,
+    setSellingSIM,
+  });
+
   const canAddCustomer = typeof onAddCustomer === 'function';
 
   const customerInsights = useCustomerInsights(localCustomers, localSims, localTransactions);
@@ -173,14 +133,6 @@ export function OperatorDashboardView({
     }
 
     const { customer, customerTransactions } = selectedCustomerInsight;
-    const lifecycleEvents = (selectedCustomerSim?.id ? selectedSimLifecycle : [])
-      .filter((event) => Boolean(event?.event_date))
-      .map((event, index) => ({
-        id: `sim-life-${selectedCustomerSim?.id}-${index}-${event.event_type || 'event'}`,
-        label: `SIM ${selectedCustomerSim?.msisdn || selectedCustomerSim?.iccid || selectedCustomerSim?.id}: ${event.summary}${event.details ? ` · ${event.details}` : ''}`,
-        date: event.event_date,
-      }));
-
     return [
       {
         id: `customer-${customer.id}`,
@@ -211,11 +163,10 @@ export function OperatorDashboardView({
           date: transaction.date,
         };
       }),
-      ...lifecycleEvents,
     ]
       .filter((entry) => Boolean(entry.date))
       .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime());
-  }, [selectedCustomerInsight, sims, selectedCustomerSim, selectedSimLifecycle]);
+  }, [selectedCustomerInsight, sims]);
 
   const activeFilterCount = Object.values(frontDeskFilters).filter(Boolean).length;
 
@@ -364,10 +315,6 @@ export function OperatorDashboardView({
               refreshData={refreshData}
               userId={userId}
               branchId={branchId}
-              selectedSimLifecycle={selectedSimLifecycle}
-              isSimLifecycleLoading={isSimLifecycleLoading}
-              setSellingSIM={setSellingSIM}
-              setIsSellModalOpen={setIsSellModalOpen}
             />
           )}
 
@@ -410,7 +357,6 @@ export function OperatorDashboardView({
           setSellingSIM(null);
         }}
         onSell={handleCompleteSale}
-        onReactivate={handleCompleteReactivation}
         sim={sellingSIM && !sellingSIM.preselectedMSISDN && !sellingSIM.customerBuyFlow ? sellingSIM : null}
         preselectedMSISDN={sellingSIM?.preselectedMSISDN || null}
         lockedCustomer={sellingSIM?.lockedCustomer || null}

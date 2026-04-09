@@ -1,7 +1,8 @@
 import React from 'react';
 import { TAB_LABELS } from '@/presentation/views/operator/utils/constants';
 
-export const TabNavigationView = ({ tabOrder, activeTab, setActiveTab, draggedTab, setDraggedTab, onDropTab }) => {
+export const TabNavigationView = ({ tabOrder, activeTab, setActiveTab, draggedTab, setDraggedTab, onDropTab, labels }) => {
+  const labelMap = labels || TAB_LABELS;
   return (
     <div className="border-b border-[#f3f3f3]">
       <div className="flex">
@@ -20,7 +21,7 @@ export const TabNavigationView = ({ tabOrder, activeTab, setActiveTab, draggedTa
                 : 'border-transparent text-[#828282] hover:text-[#1f1f1f]'
             } ${draggedTab === tabKey ? 'opacity-70' : ''}`}
           >
-            {TAB_LABELS[tabKey] || tabKey}
+            {labelMap[tabKey] || tabKey}
           </button>
         ))}
       </div>

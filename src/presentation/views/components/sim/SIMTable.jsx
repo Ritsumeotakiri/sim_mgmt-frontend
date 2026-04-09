@@ -175,7 +175,7 @@ export function SIMTable({ sims, userRole, userId = null, branchId = null, plans
     const simsRequestRef = useRef(0);
     const canEdit = ['admin', 'manager'].includes(userRole);
     const canDelete = ['admin'].includes(userRole);
-    const canAdd = ['admin', 'manager'].includes(userRole);
+    const canAdd = typeof onAdd === 'function' && ['admin', 'manager'].includes(userRole);
     const canSell = ['admin', 'manager', 'operator'].includes(userRole);
     const canRunTransactions = ['admin', 'manager', 'operator'].includes(userRole);
     const canBatch = canDelete;

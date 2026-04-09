@@ -262,7 +262,26 @@ function App() {
                                     />
                                 );
             case 'manager':
-                return (<ManagerDashboard sims={simManagement.sims} msisdns={simManagement.msisdns} transactions={simManagement.transactions} users={userManagement.users} totalUsers={userManagement.totalUsers} currentUserBranchId={auth.userBranchId} stats={simManagement.stats} onAddSIM={simManagement.handleAddSIM} onEditSIM={simManagement.handleEditSIM} onBatchImportSIM={simManagement.handleImportSIMBatch}/>);
+                return (
+                    <ManagerDashboard
+                        sims={simManagement.sims}
+                        msisdns={simManagement.msisdns}
+                        transactions={simManagement.transactions}
+                        users={userManagement.users}
+                        totalUsers={userManagement.totalUsers}
+                        currentUserBranchId={auth.userBranchId}
+                        stats={simManagement.stats}
+                        onAddSIM={simManagement.handleAddSIM}
+                        onEditSIM={simManagement.handleEditSIM}
+                        onBatchImportSIM={simManagement.handleImportSIMBatch}
+                        customers={simManagement.customers}
+                        plans={simManagement.plans}
+                        onSellSIM={simManagement.completeSale}
+                        onAddCustomer={simManagement.handleAddCustomer}
+                        userId={auth.userId}
+                        branchId={auth.userBranchId}
+                    />
+                );
             case 'admin':
             case 'viewer':
             default:
@@ -278,9 +297,9 @@ function App() {
                 }
                 return renderDashboard();
             case 'sims':
-                return (<SIMTable sims={simManagement.sims} userRole={userRole} userId={auth.userId} branchId={auth.userBranchId} plans={simManagement.plans} onEdit={userRole === 'viewer' || userRole === 'operator' ? () => { } : simManagement.openEditSIMModal} onDelete={userRole === 'admin' ? simManagement.handleDeleteSIM : () => { }} onAdd={userRole === 'admin' || userRole === 'manager' ? simManagement.openAddSIMModal : () => { }} onSell={userRole === 'admin' || userRole === 'operator' ? simManagement.handleSellSIM : undefined} batchModeEnabled={userRole === 'admin' ? batchOperationsEnabled : false} onBulkUpdateStatus={userRole === 'admin' ? simManagement.handleBulkUpdateSIMStatus : undefined} onBulkUpdateBranch={userRole === 'admin' ? simManagement.handleBulkUpdateSIMBranch : undefined} onBulkDelete={userRole === 'admin' ? simManagement.handleBulkDeleteSIMs : undefined} useServerPagination={true} selectedSimId={simDetailIdFromPath} onOpenSimDetail={(simId) => navigate(`/sims/${simId}`)} onCloseSimDetail={() => navigate('/sims')}/>);
+                return (<SIMTable sims={simManagement.sims} userRole={userRole} userId={auth.userId} branchId={auth.userBranchId} plans={simManagement.plans} onEdit={userRole === 'viewer' || userRole === 'operator' ? () => { } : simManagement.openEditSIMModal} onDelete={userRole === 'admin' ? simManagement.handleDeleteSIM : () => { }} onAdd={userRole === 'admin' ? simManagement.openAddSIMModal : undefined} onSell={userRole === 'admin' || userRole === 'operator' ? simManagement.handleSellSIM : undefined} batchModeEnabled={userRole === 'admin' ? batchOperationsEnabled : false} onBulkUpdateStatus={userRole === 'admin' ? simManagement.handleBulkUpdateSIMStatus : undefined} onBulkUpdateBranch={userRole === 'admin' ? simManagement.handleBulkUpdateSIMBranch : undefined} onBulkDelete={userRole === 'admin' ? simManagement.handleBulkDeleteSIMs : undefined} useServerPagination={true} selectedSimId={simDetailIdFromPath} onOpenSimDetail={(simId) => navigate(`/sims/${simId}`)} onCloseSimDetail={() => navigate('/sims')}/>);
             case 'plans':
-                return (<PlansManagement plans={simManagement.plans} canEdit={userRole === 'admin' || userRole === 'manager'} onAdd={userRole === 'admin' || userRole === 'manager' ? simManagement.handleAddPlan : undefined} onEdit={userRole === 'admin' || userRole === 'manager' ? simManagement.handleEditPlan : undefined} onDelete={userRole === 'admin' || userRole === 'manager' ? simManagement.handleDeletePlan : undefined}/>);
+                return (<PlansManagement plans={simManagement.plans} canEdit={userRole === 'admin'} onAdd={userRole === 'admin' ? simManagement.handleAddPlan : undefined} onEdit={userRole === 'admin' ? simManagement.handleEditPlan : undefined} onDelete={userRole === 'admin' ? simManagement.handleDeletePlan : undefined}/>);
             case 'profile':
                 return (<ProfilePage userName={auth.userName} userEmail={auth.userEmail || ''} userRole={userRole}/>);
             case 'msisdns':
