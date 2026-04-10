@@ -16,7 +16,7 @@ const MSISDNInventory = lazyNamed(() => import('@/presentation/views/components/
 const TransactionsTable = lazyNamed(() => import('@/presentation/views/components/transaction/TransactionsTable'), 'TransactionsTable');
 const CustomersTable = lazyNamed(() => import('@/presentation/views/components/customer/CustomersTable'), 'CustomersTable');
 const PlansManagement = lazyNamed(() => import('@/presentation/views/components/plan/PlansManagement'), 'PlansManagement');
-const UserManagement = lazyNamed(() => import('@/presentation/views/components/user/UserManagement'), 'UserManagement');
+// UserManagement component removed; render a lightweight inline users view below instead
 const SIMFormModal = lazyNamed(() => import('@/presentation/views/components/sim/SIMFormModal'), 'SIMFormModal');
 const SellSIMModal = lazyNamed(() => import('@/presentation/views/components/sim/SellSIMModal'), 'SellSIMModal');
 const ProfilePage = lazyNamed(() => import('@/presentation/views/user/ProfilePageView'), 'ProfilePageView');
@@ -342,7 +342,33 @@ function App() {
             case 'transactions':
                 return <TransactionsTable transactions={simManagement.transactions} useServerPagination={true}/>;
             case 'users':
-                return (<UserManagement users={userManagement.users} transactions={simManagement.transactions} onAdd={userRole === 'admin' ? userManagement.handleAddUser : undefined} onEdit={userRole === 'admin' ? userManagement.handleEditUser : undefined} onDelete={userRole === 'admin' ? userManagement.handleDeleteUser : undefined} useServerPagination={true}/>);
+                return (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">User Management</h2>
+                            {userRole === 'admin' && (
+                                <button className="bg-[#1f1f1f] text-white px-3 py-1 rounded" onClick={() => userManagement.handleAddUser && userManagement.handleAddUser()}>Add User</button>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {userManagement.users.map((u) => (
+                                <div key={u.id || u.userId || u.email} className="p-4 border rounded-lg bg-white">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="font-medium text-[#1f1f1f]">{u.name || u.username || u.email || '—'}</div>
+                                            <div className="text-sm text-[#828282]">{u.email || 'No email'}</div>
+                                        </div>
+                                        <div className="space-x-2">
+                                            {userRole === 'admin' && <button onClick={() => userManagement.handleEditUser && userManagement.handleEditUser(u)} className="text-sm text-[#1f1f1f]/80">Edit</button>}
+                                            {userRole === 'admin' && <button onClick={() => userManagement.handleDeleteUser && userManagement.handleDeleteUser(u.id || u.userId)} className="text-sm text-[#e9423a]">Delete</button>}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
             case 'settings':
                 return (<SettingsPage userRole={userRole} batchOperationsEnabled={batchOperationsEnabled} onToggleBatchOperations={handleToggleBatchOperations} onAddBranch={userRole === 'admin' ? async (branchData) => {
                         const success = await userManagement.handleAddBranch(branchData);

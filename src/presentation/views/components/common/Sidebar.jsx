@@ -2,14 +2,13 @@ import { LayoutDashboard, CreditCard, Phone, History, Users, Settings, ChevronLe
 import { cn } from '@/presentation/lib/utils';
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'operator', 'viewer'] },
-  // { id: 'profile', label: 'Profile', icon: User, roles: ['admin', 'manager', 'operator', 'viewer'] },
   { id: 'sims', label: 'SIM Cards', icon: CreditCard, roles: ['admin', 'manager', 'operator', 'viewer'] },
-  { id: 'plans', label: 'Plans', icon: NotebookText, roles: ['admin', 'manager', 'operator', 'viewer'] },
+ 
   { id: 'branch-management', label: 'Branch Management', icon: Users, roles: ['admin', 'manager'] },
   { id: 'msisdns', label: 'MSISDNs', icon: Phone, roles: ['admin', 'manager'] },
+  { id: 'plans', label: 'Plans', icon: NotebookText, roles: ['admin', 'manager', 'operator', 'viewer'] },
   { id: 'transactions', label: 'Transactions', icon: History, roles: ['admin', 'manager', 'operator', 'viewer'] },
-  { id: 'users', label: 'Users', icon: Users, roles: ['admin', 'manager'] },
-  { id: 'profile', label: 'Profile', icon: User, roles: ['admin'] },
+  // { id: 'profile', label: 'Profile', icon: User, roles: ['admin'] },
   { id: 'settings', label: 'Settings', icon: Settings, roles: ['admin'] },
 ];
 export function Sidebar({ currentView, onViewChange, userRole, userName, onLogout, collapsed, onToggleCollapsed }) {

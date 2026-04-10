@@ -242,7 +242,8 @@ export function mapTransaction(item) {
         userId: item.user_id ? String(item.user_id) : '0',
         userName: item.user_name || 'System',
         status: (item.status === 'failed' || item.status === 'pending' ? item.status : 'completed'),
-        notes: rawType || 'Transaction',
+        amount: item.amount !== undefined && item.amount !== null ? Number(item.amount) : null,
+        notes: item.notes || item.details || item.summary || null,
     };
 }
 

@@ -21,6 +21,7 @@ import {
   TIMELINE_PAGE_SIZE, 
   SIM_TX_PAGE_SIZE 
 } from '@/presentation/views/operator/utils/constants';
+import { backendApi } from '@/data/services/backendApi';
 import { normalizeSearchValue, computeBestMatchScore } from '@/presentation/views/operator/utils/searchUtils';
 import { useOperatorActionsViewModel } from '@/presentation/viewModels/useOperatorActionsViewModel';
 
@@ -128,6 +129,36 @@ export function OperatorDashboardView({
     }
     return customerInsights.find((entry) => entry.customer.id === selectedCustomerId) || null;
   }, [customerInsights, selectedCustomerId]);
+
+  const [selectedSimLifecycle, setSelectedSimLifecycle] = useState([]);
+  const [isSimLifecycleLoading, setIsSimLifecycleLoading] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+    const loadLifecycle = async () => {
+      if (!selectedCustomerSim) {
+        setSelectedSimLifecycle([]);
+        return;
+      }
+      try {
+        setIsSimLifecycleLoading(true);
+        const events = await backendApi.getSimLifecycleHistory(selectedCustomerSim.id);
+        if (!isActive) return;
+        setSelectedSimLifecycle(Array.isArray(events) ? events : []);
+      } catch (error) {
+        console.error('Error fetching SIM lifecycle history:', error);
+        if (isActive) setSelectedSimLifecycle([]);
+      } finally {
+        if (isActive) setIsSimLifecycleLoading(false);
+      }
+    };
+
+    loadLifecycle();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedCustomerSim]);
 
   const selectedCustomerTimeline = useMemo(() => {
     if (!selectedCustomerInsight) {
@@ -317,6 +348,8 @@ export function OperatorDashboardView({
               refreshData={refreshData}
               userId={userId}
               branchId={branchId}
+              selectedSimLifecycle={selectedSimLifecycle}
+              isSimLifecycleLoading={isSimLifecycleLoading}
             />
           )}
 

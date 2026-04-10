@@ -1,6 +1,6 @@
 import { login, logout } from './backendApi/auth';
 import { createBranch } from './backendApi/branch';
-import { getOperatorPerformance, getPlanRevenue } from './backendApi/dashboard';
+import { getOperatorPerformance, getPlanRevenue, getRevenues, getRevenueSummary } from './backendApi/dashboard';
 import { createCustomer, deleteCustomer, updateCustomer } from './backendApi/customer';
 import { getInitialData } from './backendApi/initialData';
 import { createMsisdn, createMsisdnWithBranch, deleteMsisdn, importMsisdnFromExcel, updateMsisdn } from './backendApi/msisdn';
@@ -15,6 +15,8 @@ export const backendApi = {
     getInitialData,
     getOperatorPerformance,
     getPlanRevenue,
+    getRevenues,
+    getRevenueSummary,
     createSim,
     importSimsFromExcel,
     getSimLifecycleHistory,

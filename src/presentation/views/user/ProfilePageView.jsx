@@ -2,7 +2,6 @@ import { Mail, Shield, User as UserIcon } from 'lucide-react';
 export function ProfilePageView({ userName, userEmail, userRole }) {
   return (<div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6 w-full">
       <div className="flex items-center gap-4 mb-6">
-        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} alt="Profile" className="w-20 h-20 rounded-full bg-[#f3f3f3]"/>
         <div>
           <h2 className="text-xl font-semibold text-[#1f1f1f]">{userName}</h2>
           <p className="text-sm text-[#828282] capitalize">{userRole}</p>

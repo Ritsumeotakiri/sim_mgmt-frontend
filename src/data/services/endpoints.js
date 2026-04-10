@@ -54,6 +54,9 @@ export const ENDPOINTS = {
     dashboard: {
         operatorPerformance: '/dashboard/operator-performance',
         planRevenue: '/dashboard/plan-revenue',
+        planRevenueByBranch: '/dashboard/plan-revenue-by-branch',
+        revenueList: '/revenue',
+        revenueSummary: '/revenue/summary',
     },
     logs: {
         frontend: '/logs/frontend',

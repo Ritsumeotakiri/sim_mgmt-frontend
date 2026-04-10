@@ -9,3 +9,29 @@ export async function getPlanRevenue() {
     return apiRequest(ENDPOINTS.dashboard.planRevenue);
 }
 
+export async function getPlanRevenueByBranch() {
+    return apiRequest(ENDPOINTS.dashboard.planRevenueByBranch);
+}
+
+export async function getRevenues(params = {}) {
+    const qs = new URLSearchParams();
+    Object.keys(params).forEach((k) => {
+        if (params[k] !== undefined && params[k] !== null) {
+            qs.append(k, String(params[k]));
+        }
+    });
+    const path = `${ENDPOINTS.dashboard.revenueList}${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return apiRequest(path);
+}
+
+export async function getRevenueSummary(params = {}) {
+    const qs = new URLSearchParams();
+    Object.keys(params).forEach((k) => {
+        if (params[k] !== undefined && params[k] !== null) {
+            qs.append(k, String(params[k]));
+        }
+    });
+    const path = `${ENDPOINTS.dashboard.revenueSummary}${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return apiRequest(path);
+}
+

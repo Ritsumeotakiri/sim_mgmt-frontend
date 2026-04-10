@@ -436,6 +436,12 @@ export const SimProfileTabView = ({
                       <p className="text-xs text-[#828282]">{formatDateTime(transaction.date)}</p>
                     </div>
                     <p className="text-xs text-[#828282] mt-1">By: {transaction.userName || 'System'}</p>
+                    <div className="text-xs text-[#828282] mt-1 flex flex-wrap gap-3">
+                      {transaction.msisdn ? <span>MSISDN: {transaction.msisdn}</span> : null}
+                      {transaction.planName ? <span>Plan: {transaction.planName}</span> : null}
+                      {transaction.amount != null ? <span>Amount: ${Number(transaction.amount).toFixed(2)}</span> : null}
+                      {transaction.notes ? <span className="w-full">{transaction.notes}</span> : null}
+                    </div>
                   </div>
                 ))}
                 {filteredSimTransactions.length > SIM_TX_PAGE_SIZE && (
