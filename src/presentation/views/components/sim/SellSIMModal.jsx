@@ -250,11 +250,22 @@ export function SellSIMModal({ isOpen, onClose, onSell, onReactivate, sim, avail
         if (!resolvedSIM || !resolvedMSISDN || !selectedPlan)
             return;
       const handler = isReactivationFlow && typeof onReactivate === 'function' ? onReactivate : onSell;
+
+      // Determine customer id to use. For reactivation, prefer lockedCustomer, then any selected customer in modal.
+      let computedCustomerId = null;
+      if (isReactivationFlow) {
+        computedCustomerId = lockedCustomer?.id ?? selectedCustomer?.id ?? null;
+      } else if (isLockedCustomerFlow) {
+        computedCustomerId = lockedCustomer?.id ?? null;
+      } else {
+        computedCustomerId = customerTab === 'existing' ? selectedCustomer?.id ?? null : null;
+      }
+
       const success = await handler({
             simId: resolvedSIM.id,
             msisdnId: resolvedMSISDN.id,
-      customerId: isReactivationFlow ? lockedCustomer?.id || null : (isLockedCustomerFlow ? lockedCustomer.id : customerTab === 'existing' ? selectedCustomer?.id || null : null),
-        newCustomer: (isReactivationFlow || isLockedCustomerFlow) ? null : customerTab === 'new' ? newCustomer : null,
+            customerId: computedCustomerId,
+        newCustomer: (!isReactivationFlow && !isLockedCustomerFlow && customerTab === 'new') ? newCustomer : null,
             planId: selectedPlan.id,
         });
         if (!success) {

@@ -20,6 +20,13 @@ export function SettingsPageView({ userRole, onAddBranch }) {
   // Editable fields state
   const [editFields, setEditFields] = useState({});
 
+  const intervalPresets = [
+    { label: "Test (1s)", value: "1000" },
+    { label: "10,000 ms (10s)", value: "10000" },
+    { label: "60,000 ms (1m)", value: "60000" },
+    { label: "300,000 ms (5m)", value: "300000" },
+  ];
+
   useEffect(() => {
     if (!isAdmin) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -106,18 +113,21 @@ export function SettingsPageView({ userRole, onAddBranch }) {
                     <label className="block text-xs font-medium text-[#828282] mb-1">
                       Plan Charge Interval (ms)
                     </label>
-                    <Input
-                      type="number"
-                      value={editFields.plan_charge_interval_ms || ""}
+                    <select
+                      className="w-full rounded-md border border-[#f3f3f3] p-2"
+                      value={String(editFields.plan_charge_interval_ms ?? "")}
                       onChange={(e) =>
-                        handleSettingChange(
-                          "plan_charge_interval_ms",
-                          e.target.value,
-                        )
+                        handleSettingChange("plan_charge_interval_ms", e.target.value)
                       }
-                      min={10000}
                       disabled={settingsSaving === true}
-                    />
+                    >
+                      <option value="">Select interval</option>
+                      {intervalPresets.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#828282] mb-1">

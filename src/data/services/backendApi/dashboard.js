@@ -35,3 +35,9 @@ export async function getRevenueSummary(params = {}) {
     return apiRequest(path);
 }
 
+export async function getRevenueById(id) {
+    if (!id) return null;
+    const path = ENDPOINTS.dashboard.revenueDetail(id);
+    return apiRequest(path);
+}
+

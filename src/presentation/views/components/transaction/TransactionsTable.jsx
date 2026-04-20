@@ -39,6 +39,7 @@ import {
 // Constants
 const transactionIcons = {
   activation: Power,
+  reactivate: Power,
   deactivation: Ban,
   transfer: ArrowRightLeft,
   suspension: Ban,
@@ -50,6 +51,7 @@ const transactionIcons = {
 
 const transactionColors = {
   activation: 'text-[#3ebb7f] bg-[#3ebb7f]/10',
+  reactivate: 'text-[#3ebb7f] bg-[#3ebb7f]/10',
   deactivation: 'text-[#828282] bg-[#828282]/10',
   transfer: 'text-[#5b93ff] bg-[#5b93ff]/10',
   suspension: 'text-[#f6a94c] bg-[#f6a94c]/10',
@@ -99,7 +101,30 @@ const startOfMonth = (dateValue) => {
 };
 
 const formatTransactionType = (value) =>
-  value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+  String(value || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+// Resolve display type for transactions. Some backends record a "sale" for
+// reactivations or include notes mentioning reactivation. Prefer explicit
+// 'reactivate' when detectable so the UI differentiates real sales vs reactivations.
+const resolveDisplayType = (transaction) => {
+  const raw = String(transaction?.type || '').toLowerCase();
+  const notes = String(transaction?.notes || '').toLowerCase();
+
+  if (raw === 'sale') {
+    if (notes.includes('reactivat') || notes.includes('reactiv') || notes.includes('reactivate')) {
+      return 'reactivate';
+    }
+    return 'sale';
+  }
+
+  // Normalize common variants
+  if (raw === 'activation') return 'reactivate';
+  if (raw === 'deactivation' || raw === 'deactivate') return 'deactivate';
+
+  return raw || 'sale';
+};
 
 const isValidColumnOrder = (value) =>
   Array.isArray(value) &&
@@ -110,9 +135,10 @@ const isValidColumnOrder = (value) =>
 function TransactionDetailModal({ transaction, open, onOpenChange }) {
   if (!transaction) return null;
 
-  const Icon = transactionIcons[transaction.type] || ShoppingCart;
+  const displayType = resolveDisplayType(transaction);
+  const Icon = transactionIcons[displayType] || ShoppingCart;
   const iconColorClass =
-    transactionColors[transaction.type] || 'bg-[#f3f3f3] text-[#828282]';
+    transactionColors[displayType] || 'bg-[#f3f3f3] text-[#828282]';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,7 +158,7 @@ function TransactionDetailModal({ transaction, open, onOpenChange }) {
             </div>
             <div>
               <div className="text-base font-semibold text-[#1f1f1f]">
-                {formatTransactionType(transaction.type)}
+                {formatTransactionType(displayType)}
               </div>
               <div className="text-xs text-[#828282]">ID: {transaction.id}</div>
             </div>
@@ -357,13 +383,19 @@ export function TransactionsTable({
     : transactions;
 
   // Memoized available types for filter dropdown
-  const availableTypes = useMemo(
-    () =>
-      Array.from(
+  const availableTypes = useMemo(() => {
+    if (useServerPagination) {
+      return Array.from(
         new Set(sourceTransactions.map((t) => t.type).filter(Boolean))
-      ).sort((a, b) => a.localeCompare(b)),
-    [sourceTransactions]
-  );
+      ).sort((a, b) => a.localeCompare(b));
+    }
+
+    // For local data, expose the resolved display types so users can
+    // filter by 'Reactivate' when a sale actually represents a reactivation.
+    return Array.from(
+      new Set(sourceTransactions.map((t) => resolveDisplayType(t)).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [sourceTransactions, useServerPagination]);
 
   // Local filtering (only when not using server pagination)
   const filteredTransactions = useMemo(() => {
@@ -384,7 +416,11 @@ export function TransactionsTable({
         (transaction.notes &&
           transaction.notes.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesType = typeFilter === 'all' || transaction.type === typeFilter;
+      const matchesType =
+        typeFilter === 'all' ||
+        (useServerPagination
+          ? transaction.type === typeFilter
+          : resolveDisplayType(transaction) === typeFilter);
       const matchesStatus =
         statusFilter === 'all' || transaction.status === statusFilter;
       const matchesDate = matchesDateFilter(transaction.date, dateRange);
@@ -502,9 +538,10 @@ export function TransactionsTable({
       transaction: {
         label: 'Transaction',
         renderCell: (transaction) => {
-          const Icon = transactionIcons[transaction.type] || ShoppingCart;
+          const displayType = resolveDisplayType(transaction);
+          const Icon = transactionIcons[displayType] || ShoppingCart;
           const iconColor =
-            transactionColors[transaction.type] ||
+            transactionColors[displayType] ||
             'text-[#828282] bg-[#828282]/10';
           return (
             <td
@@ -519,7 +556,7 @@ export function TransactionsTable({
                 </div>
                 <div>
                   <span className="text-sm text-[#1f1f1f] font-medium">
-                    {formatTransactionType(transaction.type)}
+                    {formatTransactionType(displayType)}
                   </span>
                   <p className="text-xs text-[#828282]">#{transaction.id}</p>
                 </div>

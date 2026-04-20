@@ -2,6 +2,7 @@ export const ENDPOINTS = {
     auth: {
         login: '/auth/login',
         logout: '/auth/logout',
+
     },
     sims: {
         list: '/sims',
@@ -12,6 +13,7 @@ export const ENDPOINTS = {
         assignPlan: (id) => `/sims/${id}/assign-plan`,
         deactivate: (id) => `/sims/${id}/deactivate`,
         reactivate: (id) => `/sims/${id}/reactivate`,
+
     },
     numberPool: {
         list: '/number-pool',
@@ -37,6 +39,8 @@ export const ENDPOINTS = {
         list: '/users',
         create: '/users',
         byId: (id) => `/users/${id}`,
+        delete: (id) => `/users/${id}`,
+        update: (id) => `/users/${id}`,
     },
     branches: {
         list: '/branches',
@@ -56,6 +60,7 @@ export const ENDPOINTS = {
         planRevenue: '/dashboard/plan-revenue',
         planRevenueByBranch: '/dashboard/plan-revenue-by-branch',
         revenueList: '/revenue',
+        revenueDetail: (id) => `/revenue/${id}`,
         revenueSummary: '/revenue/summary',
     },
     logs: {

@@ -350,6 +350,8 @@ export function OperatorDashboardView({
               branchId={branchId}
               selectedSimLifecycle={selectedSimLifecycle}
               isSimLifecycleLoading={isSimLifecycleLoading}
+              setSellingSIM={setSellingSIM}
+              setIsSellModalOpen={setIsSellModalOpen}
             />
           )}
 

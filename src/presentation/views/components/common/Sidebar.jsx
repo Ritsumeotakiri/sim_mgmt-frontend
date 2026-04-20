@@ -4,7 +4,7 @@ const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'operator', 'viewer'] },
   { id: 'sims', label: 'SIM Cards', icon: CreditCard, roles: ['admin', 'manager', 'operator', 'viewer'] },
  
-  { id: 'branch-management', label: 'Branch Management', icon: Users, roles: ['admin', 'manager'] },
+  { id: 'branch-management', label: 'Branch Management', icon: Users, roles: ['admin'] },
   { id: 'msisdns', label: 'MSISDNs', icon: Phone, roles: ['admin', 'manager'] },
   { id: 'plans', label: 'Plans', icon: NotebookText, roles: ['admin', 'manager', 'operator', 'viewer'] },
   { id: 'transactions', label: 'Transactions', icon: History, roles: ['admin', 'manager', 'operator', 'viewer'] },
