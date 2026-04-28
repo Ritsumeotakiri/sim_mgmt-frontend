@@ -177,8 +177,7 @@ export function ManagerDashboard({ sims, msisdns, transactions, users, onAddSIM,
               <h3 className="font-semibold text-[#1f1f1f]">Team Members</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {users.map((user) => (<div key={user.id} className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-5">
-                    <div className="flex items-center gap-3">
-                      <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full bg-[#f3f3f3]"/>
+                    <div className="flex items-center">
                       <div>
                         <h4 className="font-medium text-[#1f1f1f]">{user.name}</h4>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${user.role === 'admin' ? 'bg-[#e9423a]/10 text-[#e9423a]' :

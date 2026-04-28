@@ -123,7 +123,7 @@ export const FrontDeskTabView = ({
       </div>
 
       {/* Search and filters */}
-      <div className="bg-[#f9f9f9] rounded-xl border border-[#f3f3f3] p-4">
+      <div className="bg-white rounded-xl p-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <div className="relative flex-1 min-w-0">
             <Search className="w-4 h-4 text-[#828282] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -131,7 +131,7 @@ export const FrontDeskTabView = ({
               value={frontDeskSearch}
               onChange={handleSearchChange}
               placeholder="Search by name, phone, email, ID number"
-              className="pl-9 h-9 text-sm"
+              className="pl-9 h-12 text-sm"
               style={{ minWidth: 0 }}
             />
           </div>
@@ -140,7 +140,7 @@ export const FrontDeskTabView = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 px-3 text-xs min-w-[100px]"
+                className="h-12 px-3 text-xs min-w-[100px]"
               >
                 {activeFilterCount > 0
                   ? `Filters (${activeFilterCount})`
@@ -188,9 +188,9 @@ export const FrontDeskTabView = ({
           {canAddCustomer && (
             <Button
               onClick={() => setIsAddCustomerOpen(true)}
-              className="bg-[#1f1f1f] hover:bg-[#1f1f1f]/90 h-9 px-4 text-sm flex-shrink-0"
+              className="bg-[#3ebb7f] hover:bg-[#3ebb7f] h-12 px-4 text-sm flex-shrink-0"
             >
-              <UserPlus className="w-4 h-4 mr-2" />
+              <UserPlus className="w-4 h-4 mr-2"/>
               Register New Customer
             </Button>
           )}

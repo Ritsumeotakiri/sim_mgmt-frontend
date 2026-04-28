@@ -54,7 +54,7 @@ export function Header({ title, subtitle }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 hover:bg-[#f3f3f3]">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="User" className="w-8 h-8 rounded-full bg-[#f3f3f3]"/>
+              <div className="w-8 h-8 rounded-full bg-[#f3f3f3]"/>
               <ChevronDown className="w-4 h-4 text-[#828282]"/>
             </Button>
           </DropdownMenuTrigger>

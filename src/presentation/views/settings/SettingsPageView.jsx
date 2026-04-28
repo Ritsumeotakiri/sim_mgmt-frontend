@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Building2 } from "lucide-react";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
+import { Loading } from "@/presentation/components/ui/Loading";
 
 import { fetchSettings, updateSetting } from "@/data/services/backendApi/setting";
 
@@ -21,19 +22,32 @@ export function SettingsPageView({ userRole, onAddBranch }) {
   const [editFields, setEditFields] = useState({});
 
   const intervalPresets = [
-    { label: "Test (1s)", value: "1000" },
-    { label: "10,000 ms (10s)", value: "10000" },
-    { label: "60,000 ms (1m)", value: "60000" },
-    { label: "300,000 ms (5m)", value: "300000" },
+    { label: "1 second", value: "1000" },
+    { label: "10 seconds", value: "10000" },
+    { label: "1 minute", value: "60000" },
+    { label: "5 minutes", value: "300000" },
+    { label: "10 minutes", value: "600000" },
+    { label: "30 minutes", value: "1800000" },
+    { label: "1 hour", value: "3600000" },
+    { label: "6 hours", value: "21600000" },
+    { label: "12 hours", value: "43200000" },
+    { label: "24 hours", value: "86400000" },
   ];
 
   useEffect(() => {
     if (!isAdmin) return;
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSettingsLoading(true);
     fetchSettings()
       .then((data) => {
-        const obj = {};
+        const obj = {
+            plan_charge_interval_ms: null,
+            plan_grace_days: null,
+            min_topup_amount: null,
+            max_topup_amount: null,
+            max_sim_per_customer: null,
+        };
         data.forEach(({ name, value }) => {
           obj[name] = value;
         });
@@ -102,7 +116,7 @@ export function SettingsPageView({ userRole, onAddBranch }) {
               Scheduler & SIM Management
             </h3>
             {settingsLoading ? (
-              <div className="text-sm text-[#828282]">Loading settings...</div>
+              <Loading message="Loading settings..." size="sm" />
             ) : (
               <>
                 {settingsError && (
@@ -152,6 +166,20 @@ export function SettingsPageView({ userRole, onAddBranch }) {
                       value={editFields.min_topup_amount || ""}
                       onChange={(e) =>
                         handleSettingChange("min_topup_amount", e.target.value)
+                      }
+                      min={0}
+                      disabled={settingsSaving === true}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#828282] mb-1">
+                      Max Top-up Amount
+                    </label>
+                    <Input
+                      type="number"
+                      value={editFields.max_topup_amount || ""}
+                      onChange={(e) =>
+                        handleSettingChange("max_topup_amount", e.target.value)
                       }
                       min={0}
                       disabled={settingsSaving === true}

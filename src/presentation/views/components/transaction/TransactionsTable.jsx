@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '../common/StatusBadge';
 import { Button } from '@/presentation/components/ui/button';
+import { Loading } from '@/presentation/components/ui/Loading';
 import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequestWithMeta } from '@/data/services/backendApi/client';
 import { mapTransaction } from '@/data/services/backendApi/mappers';
@@ -813,11 +814,8 @@ export function TransactionsTable({
           <tbody>
             {loading ? (
               <tr>
-                <td
-                  colSpan={columnOrder.length}
-                  className="p-4 text-sm text-[#828282] text-center"
-                >
-                  Loading transactions...
+                <td colSpan={columnOrder.length} className="p-4 text-center">
+                  <Loading message="Loading transactions..." size="sm" />
                 </td>
               </tr>
             ) : error ? (

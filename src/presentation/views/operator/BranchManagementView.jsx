@@ -11,6 +11,7 @@ import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription,} from "
 import { getBranchManagementViewModel } from "@/domain/branch/getBranchManagementViewModel";
 import { createBranch } from "@/data/services/backendApi/branch";
 import { createUser, updateUser, deleteUser } from "@/data/services/backendApi/user";
+import { Loading } from "@/presentation/components/ui/Loading";
 
 ChartJS.register(  CategoryScale,  LinearScale,BarElement,Title,Tooltip,Legend,);
 const BRANCH_SELECTION_KEY = "sim-mgmt-selected-branch-ids";
@@ -247,11 +248,7 @@ export default function BranchManagementView() {
     const activeBranch = branches.find((b) => b.id === activeTabId);
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="text-lg text-gray-500">Loading branches...</div>
-            </div>
-        );
+        return <Loading fullScreen message="Loading branches..." />;
     }
     if (error) {
         return (

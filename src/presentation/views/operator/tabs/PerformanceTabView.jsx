@@ -5,9 +5,7 @@ import { formatDateTime } from '@/presentation/views/operator/utils/dateUtils';
 export const PerformanceTabView = ({ performanceMetrics }) => {
   return (
     <div className="space-y-4">
-      <div className="border border-[#f3f3f3] rounded-xl bg-white p-4">
-        <h3 className="text-base font-semibold text-[#1f1f1f]">My Performance</h3>
-      </div>
+      
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <div className="rounded-lg border border-[#f3f3f3] bg-white p-4">

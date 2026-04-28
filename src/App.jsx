@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from '@/presentation/components/ui/sonner';
+import { Loading } from '@/presentation/components/ui/Loading';
 import { useAuth } from '@/presentation/viewModels/app/useAuthViewModel';
 import { useSIMManagementViewModel } from '@/presentation/viewModels/app/useSIMManagementViewModel';
 import { useUserManagementViewModel } from '@/presentation/viewModels/app/useUserManagementViewModel';
@@ -11,6 +12,7 @@ const Dashboard = lazyNamed(() => import('@/presentation/views/dashboard/admin/D
 const OperatorDashboard = lazyNamed(() => import('@/presentation/views/operator/OperatorDashboardView'), 'OperatorDashboardView');
 const ManagerDashboard = lazyNamed(() => import('@/presentation/views/dashboard/manager/ManagerDashboardView'), 'ManagerDashboardView');
 const BranchPerformanceDetail = lazyNamed(() => import('@/presentation/views/branch/BranchPerformanceDetailView'), 'BranchPerformanceDetailView');
+const TeamMemberPerformance = lazyNamed(() => import('@/presentation/views/dashboard/manager/TeamMemberPerformanceView'), 'TeamMemberPerformanceView');
 const SIMTable = lazyNamed(() => import('@/presentation/views/components/sim/SIMTable'), 'SIMTable');
 const MSISDNInventory = lazyNamed(() => import('@/presentation/views/components/msisdn/MSISDNInventory'), 'MSISDNInventory');
 const TransactionsTable = lazyNamed(() => import('@/presentation/views/components/transaction/TransactionsTable'), 'TransactionsTable');
@@ -99,6 +101,11 @@ function App() {
         return match ? decodeURIComponent(match[1]) : null;
     }, [location.pathname]);
 
+    const teamMemberIdFromPath = useMemo(() => {
+        const match = location.pathname.match(/^\/dashboard\/team\/member\/(.+)$/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }, [location.pathname]);
+
     const currentView = useMemo(() => {
         if (!auth.isAuthenticated) {
             return 'dashboard';
@@ -131,14 +138,26 @@ function App() {
     };
 
     const allNotifications = useMemo(() => {
+        const TRANSACTION_LABELS = {
+            sale: 'Sale',
+            top_up: 'Top-up',
+            topup: 'Top-up',
+            reactivate: 'Reactivation',
+            reactivation: 'Reactivation',
+            transfer: 'Transfer',
+            refund: 'Refund',
+        };
+
         const transactionNotifications = simManagement.transactions.map((transaction) => {
             const timestamp = transaction.date instanceof Date ? transaction.date : new Date(transaction.date || 0);
+            const rawTypeKey = String(transaction.type || transaction.transactionType || 'transaction').toLowerCase().replace(/\s+/g, '_');
             const normalizedType = String(transaction.type || transaction.transactionType || 'transaction').replace(/_/g, ' ');
+            const label = TRANSACTION_LABELS[rawTypeKey] || `${normalizedType.charAt(0).toUpperCase()}${normalizedType.slice(1)}`;
             const normalizedStatus = String(transaction.status || '').toLowerCase();
             const isCompleted = normalizedStatus === 'completed';
             const message = isCompleted
-                ? `${normalizedType.charAt(0).toUpperCase()}${normalizedType.slice(1)} completed`
-                : `${normalizedType.charAt(0).toUpperCase()}${normalizedType.slice(1)} ${normalizedStatus || 'updated'}`;
+                ? `${label} completed`
+                : `${label} ${normalizedStatus || 'updated'}`;
 
             return {
                 id: `tx-${transaction.id || timestamp.getTime()}`,
@@ -200,7 +219,11 @@ function App() {
         }
 
         const mappedView = PATH_TO_VIEW[location.pathname];
-        const inferredView = mappedView || (location.pathname.startsWith('/sims/') ? 'sims' : location.pathname.startsWith('/dashboard/branches/') ? 'dashboard' : null);
+        const inferredView = mappedView
+            || (location.pathname.startsWith('/sims/') ? 'sims'
+                : location.pathname.startsWith('/dashboard/branches/') ? 'dashboard'
+                : location.pathname.startsWith('/dashboard/team/') ? 'dashboard'
+                : null);
         if (!inferredView) {
             navigate(VIEW_TO_PATH.dashboard, { replace: true });
             return;
@@ -301,6 +324,9 @@ function App() {
     const renderContent = () => {
         switch (currentView) {
             case 'dashboard':
+                if (teamMemberIdFromPath) {
+                    return (<TeamMemberPerformance memberId={teamMemberIdFromPath} sims={simManagement.sims} customers={simManagement.customers} transactions={simManagement.transactions} users={userManagement.users} onBack={() => navigate('/dashboard')} />);
+                }
                 if (userRole === 'admin' && branchDetailNameFromPath) {
                     return (<BranchPerformanceDetail branchName={branchDetailNameFromPath} operatorPerformance={simManagement.operatorPerformance} users={userManagement.users} transactions={simManagement.transactions} onBack={() => navigate('/dashboard')} onOpenUserManagement={() => navigateToView('users')} onOpenSIMManagement={() => navigateToView('sims')} onOpenTransactionsManagement={() => navigateToView('transactions')}/>);
                 }
@@ -379,7 +405,7 @@ function App() {
                     } : undefined} operatorPerformance={simManagement.operatorPerformance}/>);
             case 'branch-management':
                 return (
-                    <Suspense fallback={<div>Loading Branch Management...</div>}>
+                    <Suspense fallback={<div className="px-6"><Loading message="Loading Branch Management..." /></div>}>
                         <BranchManagementView />
                     </Suspense>
                 );
@@ -404,7 +430,7 @@ function App() {
             </>);
 
         const loadingFallback = (<div className="min-h-screen px-6 text-sm text-[#828282] flex items-center justify-center">
-            Loading...
+            <Loading message="Loading..." />
         </div>);
 
         return (<>

@@ -1,6 +1,7 @@
 import { CreditCard, TrendingUp, Users, Phone, CheckCircle2, Clock, AlertCircle, Package } from 'lucide-react';
 import { StatsCard } from '@/presentation/views/components/common/StatsCard';
 import { SIMFormModal } from '@/presentation/views/components/sim/SIMFormModal';
+import { useNavigate } from 'react-router-dom';
 import useManagerDashboard from './useManagerDashboard';
 import OverviewTab from './tabs/OverviewTab';
 import SIMsTab from './tabs/SIMsTab';
@@ -35,6 +36,10 @@ export function ManagerDashboardView({ sims, msisdns, transactions, users, curre
     handleEditSIM,
     handleSaveSIM,
   } = useManagerDashboard({ sims, msisdns, transactions, users, currentUserBranchId, stats: aggregateStats, onAddSIM, onEditSIM, onBatchImportSIM });
+
+  const navigate = useNavigate();
+
+  // Team dialog shows member info and performance inline; no manager-only operator state required here
 
   function TabNavigationWrapper({ activeTab, setActiveTab }) {
     const settingKey = userId ? `manager-dashboard-tab-order-v1:${userId}` : undefined;
@@ -75,14 +80,21 @@ export function ManagerDashboardView({ sims, msisdns, transactions, users, curre
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 border border-[#f3f3f3] shadow-sm">
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Open transactions"
+          onClick={() => navigate('/transactions')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); navigate('/transactions'); } }}
+          className="bg-white rounded-xl p-5 border border-[#f3f3f3] shadow-sm cursor-pointer focus:outline-none"
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#f6a94c]/10 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-[#f6a94c]"/>
             </div>
             <div>
-              <p className="text-sm text-[#828282]">Total Transactions</p>
-              <p className="text-xl font-semibold text-[#1f1f1f]">{stats.totalTransactions}</p>
+              {/* <p className="text-sm text-[#828282]">Total Transactions</p> */}
+              <p className="text-sm text-[#000000]">See transactions</p>
             </div>
           </div>
         </div>
@@ -128,7 +140,7 @@ export function ManagerDashboardView({ sims, msisdns, transactions, users, curre
               />
             </div>
           )}
-          {activeTab === 'team' && <TeamTab scopedTeamUsers={scopedTeamUsers} selectedTeamMember={selectedTeamMember} setSelectedTeamMember={setSelectedTeamMember} teamPerformanceByUserName={teamPerformanceByUserName} />}
+          {activeTab === 'team' && <TeamTab scopedTeamUsers={scopedTeamUsers} selectedTeamMember={selectedTeamMember} setSelectedTeamMember={setSelectedTeamMember} teamPerformanceByUserName={teamPerformanceByUserName} transactions={transactions} sims={sims} customers={customers} />}
         </div>
       </div>
 

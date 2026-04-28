@@ -8,6 +8,7 @@ import { addBalanceToSim, deactivateSim } from '@/data/services/backendApi/sim';
 import { BackButton } from '@/presentation/views/components/common/BackButton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDateTime } from '@/presentation/views/operator/utils/dateUtils';
+import { Loading } from '@/presentation/components/ui/Loading';
 // Helper to format date with month name
 function formatDateWithMonthName(dateValue) {
   if (!dateValue) return '';
@@ -488,7 +489,7 @@ export const SimProfileTabView = ({
               </div>
             </div>
             {isSimLifecycleLoading ? (
-              <p className="text-sm text-[#828282]">Loading activity...</p>
+              <Loading message="Loading activity..." size="sm" />
             ) : filteredSimLifecycle.length === 0 ? (
               <p className="text-sm text-[#828282]">No lifecycle events found for this filter.</p>
             ) : (

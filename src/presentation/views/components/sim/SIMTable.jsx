@@ -3,6 +3,7 @@ import { Plus, Search, Filter, ChevronLeft, ChevronRight, Edit2, Trash2, Shoppin
 import { StatusBadge } from '../common/StatusBadge';
 import { BackButton } from '../common/BackButton';
 import { Button } from '@/presentation/components/ui/button';
+import { Loading } from '@/presentation/components/ui/Loading';
 import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequest, apiRequestWithMeta } from '@/data/services/backendApi/client';
 import { mapSim } from '@/data/services/backendApi/mappers';
@@ -772,7 +773,7 @@ export function SIMTable({ sims, userRole, userId = null, branchId = null, plans
                       }))}
                       </div>)}
                   </div>)}
-                {lifecycleHistoryOpen && (historyLoading ? (<p className="text-sm text-[#828282]">Loading history...</p>) : historyEvents.length === 0 ? (<p className="text-sm text-[#828282]">No history yet.</p>) : (<>
+                {lifecycleHistoryOpen && (historyLoading ? (<Loading message="Loading history..." size="sm" />) : historyEvents.length === 0 ? (<p className="text-sm text-[#828282]">No history yet.</p>) : (<>
                     <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                     {paginatedHistoryEvents.map((event, index) => {
                     const eventDate = event?.event_date ? new Date(event.event_date) : null;
@@ -813,7 +814,7 @@ export function SIMTable({ sims, userRole, userId = null, branchId = null, plans
                 <p className="text-sm text-[#828282]">Select all on this page</p>
               </div>)}
 
-            {loading && (<div className="text-sm text-[#828282]">Loading SIMs...</div>)}
+            {loading && (<Loading message="Loading SIMs..." size="sm" />)}
 
             {!loading && paginatedSIMs.length === 0 ? (<div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-6 text-sm text-[#828282] text-center">
                 No SIMs found.

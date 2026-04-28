@@ -11,6 +11,7 @@ import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequestWithMeta } from '@/data/services/backendApi/client';
 import { mapMsisdn } from '@/data/services/backendApi/mappers';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/presentation/components/ui/select';
+import { Loading } from '@/presentation/components/ui/Loading';
 
 const DEFAULT_COLUMN_ORDER = ['number', 'branch', 'price', 'status', 'sim', 'assignedDate', 'actions'];
 const COLUMN_ORDER_STORAGE_KEY = 'column-order-msisdn-table-v1';
@@ -466,7 +467,7 @@ export function MSISDNInventory({ msisdns, onAdd, onBatchImport, onEdit, onDelet
                 </tr>))}
             </tbody>
           </table>
-          {loading && (<div className="p-4 text-sm text-[#828282]">Loading MSISDNs...</div>)}
+          {loading && (<Loading message="Loading MSISDNs..." size="sm" />)}
         </div>
 
         {/* Pagination */}

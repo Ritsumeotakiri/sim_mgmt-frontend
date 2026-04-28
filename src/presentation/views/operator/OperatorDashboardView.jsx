@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { Loading } from '@/presentation/components/ui/Loading';
 
 const BranchManagementView = lazy(() => import('./BranchManagementView'));
 import { SellSIMModal } from '@/presentation/views/components/sim/SellSIMModal';
@@ -34,7 +35,7 @@ export function OperatorDashboardView({
   onSellSIM, 
   onAddCustomer,
   userId, // Add userId prop
-  branchId // Add branchId prop
+  branchId, // Add branchId prop
 }) {
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [sellingSIM, setSellingSIM] = useState(null);
@@ -77,6 +78,9 @@ export function OperatorDashboardView({
   useEffect(() => {
     setSimTxPage(1);
   }, [selectedCustomerSim]);
+
+  // If an external initial tab is requested (e.g. show 'performance'), honor it
+  
 
   useEffect(() => { 
     setLocalCustomers(customers); 
@@ -273,7 +277,7 @@ export function OperatorDashboardView({
           onDropTab={onDropTab}
         />
 
-        <div className="p-5">
+        <div className="p-6">
           {activeTab === 'frontdesk' && (
             <FrontDeskTabView
               customers={localCustomers}
@@ -386,7 +390,7 @@ export function OperatorDashboardView({
 
 
           {activeTab === 'branch-management' && (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div className="px-2"><Loading message="Loading..." /></div>}>
               <BranchManagementView />
             </Suspense>
           )}

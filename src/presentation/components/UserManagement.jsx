@@ -73,8 +73,7 @@ export function UserManagement({ users, onAdd, onEdit, onDelete }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredUsers.map((user) => (<div key={user.id} className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full bg-[#f3f3f3]"/>
+              <div className="flex items-center">
                 <div>
                   <h3 className="font-medium text-[#1f1f1f]">{user.name}</h3>
                   <RoleBadge role={user.role}/>

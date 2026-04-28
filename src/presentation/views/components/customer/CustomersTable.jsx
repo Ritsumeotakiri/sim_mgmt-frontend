@@ -1,6 +1,7 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
 import { Search, ChevronLeft, ChevronRight, User, Mail, Phone, IdCard, Plus, Edit2, Trash2, Eye, Clock3 } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
+import { Loading } from '@/presentation/components/ui/Loading';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/presentation/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/presentation/components/ui/alert-dialog';
 import { Label } from '@/presentation/components/ui/label';
@@ -348,7 +349,7 @@ export function CustomersTable({ customers, transactions = [], sims = [], plans 
               </tr>))}
           </tbody>
         </table>
-        {loading && (<div className="p-4 text-sm text-[#828282]">Loading customers...</div>)}
+        {loading && (<Loading message="Loading customers..." size="sm" />)}
       </div>
 
       <div className="p-4 border-t border-[#f3f3f3] flex items-center justify-between">

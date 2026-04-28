@@ -92,7 +92,7 @@ export function SellSIMModal({ isOpen, onClose, onSell, onReactivate, sim, avail
 
     const hasPreselectedMSISDN = Boolean(preselectedMSISDN);
     const isLockedCustomerFlow = Boolean(lockedCustomer);
-    const isReactivationFlow = Boolean(sim?.reactivate);
+    const isReactivationFlow = Boolean(sim?.reactivate || lockedCustomer);
     const requiresIccidStep = !isReactivationFlow && !sim && !hasPreselectedMSISDN && !isLockedCustomerFlow;
     const totalSteps = isReactivationFlow ? 2 : (requiresIccidStep ? 4 : 3);
     const submitLabel = isReactivationFlow ? 'Complete Reactivation' : 'Complete Sale';

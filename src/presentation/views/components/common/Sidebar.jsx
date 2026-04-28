@@ -18,8 +18,7 @@ export function Sidebar({ currentView, onViewChange, userRole, userName, onLogou
         {/* Logo */}
         <div className="flex items-center justify-between p-4 border-b border-[#f3f3f3]">
           {!collapsed && (<div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#1f1f1f] rounded-lg flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-white"/>
+              <div>
               </div>
               <span className="font-semibold text-[#1f1f1f]">SIM Manager</span>
             </div>)}
