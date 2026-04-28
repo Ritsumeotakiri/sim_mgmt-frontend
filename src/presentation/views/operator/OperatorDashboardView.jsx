@@ -33,6 +33,7 @@ export function OperatorDashboardView({
   plans, 
   transactions, 
   onSellSIM, 
+  onReactivateSIM,
   onAddCustomer,
   userId, // Add userId prop
   branchId, // Add branchId prop
@@ -104,6 +105,7 @@ export function OperatorDashboardView({
   const {
     refreshData,
     handleCompleteSale,
+    handleCompleteReactivation,
     handleOpenQuickSale,
     handleQuickTopUp,
     handleQuickChangePlan,
@@ -112,6 +114,7 @@ export function OperatorDashboardView({
     branchId,
     localSims,
     onSellSIM,
+    onReactivateSIM,
     selectedCustomerSim,
     setSelectedCustomerSim,
     setLocalCustomers,
@@ -405,6 +408,7 @@ export function OperatorDashboardView({
           setSellingSIM(null);
         }}
         onSell={handleCompleteSale}
+        onReactivate={handleCompleteReactivation}
         sim={sellingSIM && !sellingSIM.preselectedMSISDN && !sellingSIM.customerBuyFlow ? sellingSIM : null}
         preselectedMSISDN={sellingSIM?.preselectedMSISDN || null}
         lockedCustomer={sellingSIM?.lockedCustomer || null}
