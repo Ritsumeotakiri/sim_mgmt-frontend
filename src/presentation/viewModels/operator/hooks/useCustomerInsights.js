@@ -12,8 +12,14 @@ export const useCustomerInsights = (customers, sims, transactions) => {
       const activeSims = customerSims.filter((sim) => String(sim.status || '').toLowerCase() === 'active');
       const lastActivity = customerTransactions[0]?.date || customer.createdAt;
 
+      // Do not mutate the original customer object — create a shallow copy with totalSims included
+      const customerWithTotals = {
+        ...customer,
+        totalSims: customerSims.length,
+      };
+
       return {
-        customer,
+        customer: customerWithTotals,
         customerTransactions,
         customerSims,
         activeSims,

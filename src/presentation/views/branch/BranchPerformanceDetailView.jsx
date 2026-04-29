@@ -311,13 +311,6 @@ export function BranchPerformanceDetailView({
               </div>
             </div>
 
-            {selectedEmployee?.lastSessionIp && (
-              <div className="bg-white border border-[#f3f3f3] rounded-lg p-3 mb-4">
-                <p className="text-xs text-[#828282]">Last Session IP</p>
-                <p className="text-sm font-medium text-[#1f1f1f]">{selectedEmployee.lastSessionIp}</p>
-              </div>
-            )}
-
             <div className="max-h-[520px] overflow-y-auto">
               {selectedEmployeeActions.length === 0 ? (
                 <div className="text-center py-16">

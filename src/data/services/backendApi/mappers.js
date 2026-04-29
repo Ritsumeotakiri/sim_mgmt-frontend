@@ -228,11 +228,34 @@ export function mapCustomer(item) {
 export function mapTransaction(item) {
     const transactionId = item.id ?? item.transaction_id;
     const rawType = String(item.transaction_type || item.type || 'sale').toLowerCase();
+    // Normalize transaction status without coercing unknown values to 'completed'
+    const rawStatus = String(item.status || '').trim().toLowerCase();
+    let normalizedStatus;
+    if (!rawStatus) {
+        normalizedStatus = 'unknown';
+    } else if (['completed', 'success', 'ok'].includes(rawStatus)) {
+        normalizedStatus = 'completed';
+    } else if (rawStatus === 'pending') {
+        normalizedStatus = 'pending';
+    } else if (['cancelled', 'canceled', 'cancel'].includes(rawStatus)) {
+        normalizedStatus = 'cancelled';
+    } else if (
+        ['failed', 'failure', 'error', 'declined', 'decline', 'rejected'].includes(rawStatus) ||
+        rawStatus.includes('insuff') ||
+        rawStatus.includes('not_enough') ||
+        rawStatus.includes('insufficient')
+    ) {
+        normalizedStatus = 'failed';
+    } else {
+        normalizedStatus = rawStatus;
+    }
+
     return {
         id: String(transactionId),
         simId: item.sim_id ? String(item.sim_id) : '',
         simIccid: item.sim_iccid || '-',
-        msisdn: item.msisdn || null,
+        // Support multiple backend field names for MSISDN (some endpoints use different aliases)
+        msisdn: item.msisdn || item.msisdn_number || item.number || item.msisdnValue || item.msisdn_value || null,
         customerId: item.customer_id ? String(item.customer_id) : null,
         customerName: item.customer_name || null,
         planId: item.plan_id ? String(item.plan_id) : null,
@@ -241,7 +264,7 @@ export function mapTransaction(item) {
         date: asDate(item.transaction_date || item.created_at),
         userId: item.user_id ? String(item.user_id) : '0',
         userName: item.user_name || 'System',
-        status: (item.status === 'failed' || item.status === 'pending' ? item.status : 'completed'),
+        status: normalizedStatus,
         amount: item.amount !== undefined && item.amount !== null ? Number(item.amount) : null,
         notes: item.notes || item.details || item.summary || null,
     };

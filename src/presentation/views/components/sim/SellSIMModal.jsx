@@ -92,7 +92,7 @@ export function SellSIMModal({ isOpen, onClose, onSell, onReactivate, sim, avail
 
     const hasPreselectedMSISDN = Boolean(preselectedMSISDN);
     const isLockedCustomerFlow = Boolean(lockedCustomer);
-    const isReactivationFlow = Boolean(sim?.reactivate || lockedCustomer);
+    const isReactivationFlow = Boolean(sim?.reactivate);
     const requiresIccidStep = !isReactivationFlow && !sim && !hasPreselectedMSISDN && !isLockedCustomerFlow;
     const totalSteps = isReactivationFlow ? 2 : (requiresIccidStep ? 4 : 3);
     const submitLabel = isReactivationFlow ? 'Complete Reactivation' : 'Complete Sale';
@@ -226,7 +226,7 @@ export function SellSIMModal({ isOpen, onClose, onSell, onReactivate, sim, avail
       setCustomerSearch('');
       setMsisdnSearch('');
       setSimSearch('');
-      if (isReactivationFlow && lockedCustomer) {
+      if ((isReactivationFlow || isLockedCustomerFlow) && lockedCustomer) {
         setCustomerTab('existing');
         setSelectedCustomer(lockedCustomer);
       }
@@ -319,7 +319,7 @@ export function SellSIMModal({ isOpen, onClose, onSell, onReactivate, sim, avail
     return (<Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isReactivationFlow ? 'Reactivate SIM' : 'Sell SIM Card'}</DialogTitle>
+          <DialogTitle>{isReactivationFlow ? 'Reactivate SIM' : isLockedCustomerFlow ? 'Buy SIM' : 'Sell SIM Card'}</DialogTitle>
           <DialogDescription>
             {isReactivationFlow
             ? `Reactivate SIM ${sim?.iccid || ''} by assigning MSISDN and plan.`

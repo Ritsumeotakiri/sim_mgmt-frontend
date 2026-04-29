@@ -205,7 +205,7 @@ export const FrontDeskTabView = ({
           </div>
         ) : (
           <div className="divide-y divide-[#f1f1f1]">
-            {paginatedCustomers.map(({ customer, activeSims }) => {
+            {paginatedCustomers.map(({ customer, activeSims,}) => {
               const initials = String(customer.name || 'Customer')
                 .split(' ')
                 .filter(Boolean)
@@ -239,6 +239,10 @@ export const FrontDeskTabView = ({
                       </p>
                     </div>
                     <div className="shrink-0 flex flex-col items-end gap-2 text-xs text-[#5f5f5f] sm:flex-row sm:items-center sm:gap-2">
+                      <span className='rounded-full bg-[#3ebb7f] text-[#ffffff] px-3 py-1.5'>
+                        {/* customer total sims */}
+                        {customer.totalSims} SIM(s)
+                      </span>
                       <span className="rounded-full bg-[#eef4ff] text-[#2f4f8f] px-3 py-1.5">
                         {activeSims.length} active SIM(s)
                       </span>

@@ -9,6 +9,7 @@ import { BackButton } from '@/presentation/views/components/common/BackButton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDateTime } from '@/presentation/views/operator/utils/dateUtils';
 import { Loading } from '@/presentation/components/ui/Loading';
+import { StatusBadge } from '@/presentation/views/components/common/StatusBadge';
 // Helper to format date with month name
 function formatDateWithMonthName(dateValue) {
   if (!dateValue) return '';
@@ -169,6 +170,46 @@ export const SimProfileTabView = ({
   const customerId = selectedCustomerInsight?.customer?.id || selectedCustomerSim?.customerId;
   const isReactivatable = ['inactive', 'deactivate'].includes(String(selectedCustomerSim?.status || '').toLowerCase());
 
+  const getStatusLabel = (raw) => {
+    const s = String(raw || '').toLowerCase();
+    switch (s) {
+      case 'active':
+        return 'Active';
+      case 'inactive':
+        return 'Inactive';
+      case 'deactivate':
+        return 'Deactivated';
+      case 'suspend':
+        return 'Suspended';
+      case 'pending':
+        return 'Pending';
+      default:
+        return raw ? String(raw).replace(/[_-]/g, ' ') : 'Unknown';
+    }
+  };
+
+  const getStatusBadgeClass = (status) => {
+    const s = String(status || '').toLowerCase();
+    if (s === 'active') return 'inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#e6f7ef] text-[#3ebb7f]';
+    if (s === 'inactive' || s === 'deactivate') return 'inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#fdeceb] text-[#e9423a]';
+    if (s === 'pending') return 'inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#fff7e6] text-[#f6a94c]';
+    return 'inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#f3f3f3] text-[#828282]';
+  };
+
+  const formatMsisdn = (raw) => {
+    if (raw === undefined || raw === null || raw === '') return '';
+    let s = String(raw).trim();
+    // remove spaces, dashes, parentheses
+    s = s.replace(/[\s\-()]/g, '');
+    // remove leading plus
+    s = s.replace(/^\+/, '');
+    // strip leading country code 855 if present
+    if (s.startsWith('855')) {
+      s = s.substring(3);
+    }
+    return s;
+  };
+
   const handleTopUp = async () => {
     if (!selectedCustomerSim || !topUpAmount) {
       toast.error('Please enter an amount');
@@ -272,8 +313,9 @@ export const SimProfileTabView = ({
       <div className="border border-[#f3f3f3] rounded-xl bg-white p-4 space-y-4">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-base font-semibold text-[#1f1f1f]">{selectedCustomerSim.msisdn || 'No MSISDN'} • SIM #{selectedCustomerSim.id}</h3>
-            <p className="text-sm text-[#828282]">ICCID: {selectedCustomerSim.iccid || 'N/A'}</p>
+            <h1 className="text-xl font-bold text-[#1f1f1f]">SIM Profile</h1>
+            {/* <h3 className="text-base font-semibold text-[#1f1f1f]">{selectedCustomerSim.msisdn || 'No MSISDN'} • SIM #{selectedCustomerSim.id}</h3> */}
+            {/* <p className="text-sm text-[#828282]">ICCID: {selectedCustomerSim.iccid || 'N/A'}</p> */}
           </div>
           <div className="flex items-center gap-2">
             {isReactivatable ? (
@@ -309,7 +351,7 @@ export const SimProfileTabView = ({
                   <DialogHeader>
                     <DialogTitle>Top Up SIM</DialogTitle>
                     <DialogDescription>
-                      Add balance to SIM: {selectedCustomerSim?.msisdn || selectedCustomerSim?.id}
+                      Add balance to SIM: {formatMsisdn(selectedCustomerSim?.msisdn) || selectedCustomerSim?.id}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-2">
@@ -363,7 +405,7 @@ export const SimProfileTabView = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-3">
             <p className="text-xs text-[#828282]">MSISDN</p>
-            <p className="text-base font-semibold text-[#1f1f1f]">{selectedCustomerSim.msisdn || 'N/A'}</p>
+            <p className="text-base font-semibold text-[#1f1f1f]">{formatMsisdn(selectedCustomerSim.msisdn) || 'N/A'}</p>
           </div>
           <div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-3">
             <p className="text-xs text-[#828282]">Status</p>
@@ -379,7 +421,7 @@ export const SimProfileTabView = ({
                   : 'bg-[#f3f3f3] text-[#828282]')
               }
             >
-              {selectedCustomerSim.status || 'unknown'}
+              {getStatusLabel(selectedCustomerSim.status)}
             </span>
           </div>
           <div className="rounded-lg border border-[#f3f3f3] bg-[#f9f9f9] p-3">
@@ -429,22 +471,30 @@ export const SimProfileTabView = ({
             {filteredSimTransactions.length === 0 ? (
               <p className="text-sm text-[#828282]">No transactions found for this filter.</p>
             ) : (
+
+              // Paginated list of transactions
               <div className="space-y-2">
                 {paginatedFilteredSimTransactions.map((transaction) => (
                   <div key={`sim-tx-${transaction.id}`} className="rounded-md border border-[#f3f3f3] p-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm text-[#1f1f1f] capitalize">{String(transaction.type || 'transaction').replace(/_/g, ' ')} ({transaction.status || 'unknown'})</p>
-                      <p className="text-xs text-[#828282]">{formatDateTime(transaction.date)}</p>
+                    {/* Transaction details */}
+                    <div className="flex items-center gap-3">
+                      {/* Transaction status badge and type */}
+                      <StatusBadge status={transaction.status} type="transaction" />
+                      <p className="text-sm text-[#1f1f1f] capitalize ml-2">{String(transaction.type || 'transaction').replace(/_/g, ' ')} </p>
+                      <p className="text-xs text-[#828282] ml-auto">{formatDateTime(transaction.date)}</p>
                     </div>
-                    <p className="text-xs text-[#828282] mt-1">By: {transaction.userName || 'System'}</p>
-                    <div className="text-xs text-[#828282] mt-1 flex flex-wrap gap-3">
-                      {transaction.msisdn ? <span>MSISDN: {transaction.msisdn}</span> : null}
+                      {/* align with the complete span */}
+                    <p className="text-xs text-[#828282] mt-1 ml-3 ">By: {transaction.userName || 'System'}</p>
+                    <div className="text-xs text-[#828282] mt-1 ml-3 flex flex-wrap gap-3">
+                      {transaction.msisdn ? <span>MSISDN: {formatMsisdn(transaction.msisdn)}</span> : null}
                       {transaction.planName ? <span>Plan: {transaction.planName}</span> : null}
                       {transaction.amount != null ? <span>Amount: ${Number(transaction.amount).toFixed(2)}</span> : null}
                       {transaction.notes ? <span className="w-full">{transaction.notes}</span> : null}
                     </div>
                   </div>
                 ))}
+
+                {/* Pagination controls */}
                 {filteredSimTransactions.length > SIM_TX_PAGE_SIZE && (
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <p className="text-xs text-[#828282]">Page {safeFilteredSimTxPage} of {filteredSimTxTotalPages}</p>
@@ -461,7 +511,7 @@ export const SimProfileTabView = ({
               </div>
             )}
           </div>
-
+{/* SIM Lifecycle Events */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <h4 className="text-sm font-semibold text-[#1f1f1f]">SIM Activity</h4>
@@ -494,15 +544,58 @@ export const SimProfileTabView = ({
               <p className="text-sm text-[#828282]">No lifecycle events found for this filter.</p>
             ) : (
               <div className="space-y-2">
-                {paginatedSimLifecycle.map((event, index) => (
-                  <div key={`sim-life-${event.id ?? event.event_date ?? 'event'}-${event.summary ?? 'update'}-${index}`} className="rounded-md border border-[#f3f3f3] p-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm text-[#1f1f1f]">{event.summary || 'SIM update'}</p>
-                      <p className="text-xs text-[#828282]">{formatDateTime(event.event_date)}</p>
+                {paginatedSimLifecycle.map((event, index) => {
+                  const summaryText = event.summary || '';
+                  const lowerSummary = String(summaryText).toLowerCase();
+                  const isActivationSummary = /sold|reactiv|activated/i.test(lowerSummary);
+
+                  return (
+                    <div key={`sim-life-${event.id ?? event.event_date ?? 'event'}-${event.summary ?? 'update'}-${index}`} className="rounded-md border border-[#f3f3f3] p-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-col">
+                          {String(event.event_type || '').toLowerCase() === 'status_change' && (event.old_status || event.new_status) ? (
+                            isActivationSummary ? (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <span className={`${getStatusBadgeClass(event.new_status)} ml-2 ring-2 ring-[#3ebb7f]`}>{getStatusLabel(event.new_status_label || event.new_status || '')}</span>
+                                  <p className="text-sm text-[#1f1f1f] font-semibold ml-3">{summaryText}</p>
+                                </div>
+                                {/* {event.details && <p className="text-xs text-[#828282] mt-1">{event.details}</p>} */}
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <span className={getStatusBadgeClass(event.old_status)}>{getStatusLabel(event.old_status_label || event.old_status || '')}</span>
+                                  <ChevronRight className="w-4 h-4 text-[#828282]" />
+                                  <span className={getStatusBadgeClass(event.new_status)}>{getStatusLabel(event.new_status_label || event.new_status || '')}</span>
+                                </div>
+                                {/* {event.details && <p className="text-xs text-[#828282] mt-1 ml-3  ">{event.details}</p>} */}
+                                {event.summary && <p className="text-xs text-[#828282] mt-1 ml-3">{event.summary}</p>}
+                              </>
+                            )
+                          ) : String(event.event_type || '').toLowerCase() === 'owner_change' && (event.old_owner || event.new_owner) ? (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-[#1f1f1f] ml-3">Owner:</p>
+                                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#f3f3f3] text-[#828282]">{event.old_owner || 'Unassigned'}</span>
+                                <ChevronRight className="w-4 h-4 text-[#828282]" />
+                                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#e6f7ef] text-[#3ebb7f]">{event.new_owner || 'Unassigned'}</span>
+                              </div>
+                              {event.details && <p className="text-xs text-[#828282] mt-1 ml-3">{event.details}</p>}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm text-[#1f1f1f] ml-3">{event.summary || 'SIM update'}</p>
+                              {/* {event.details && <p className="text-xs text-[#828282] mt-1 ml-3">{event.details}</p>} */}
+                              {event.details && <p className="text-xs text-[#828282] mt-1 ml-3">{event.details}</p>}
+                            </>
+                          )}
+                        </div>
+                        <p className="text-xs text-[#828282]">{formatDateTime(event.event_date)}</p>
+                      </div>
                     </div>
-                    {event.details && <p className="text-xs text-[#828282] mt-1">{event.details}</p>}
-                  </div>
-                ))}
+                  );
+                })}
                 {filteredSimLifecycle.length > SIM_ACTIVITY_PAGE_SIZE && (
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <p className="text-xs text-[#828282]">Page {safeFilteredSimLifecyclePage} of {filteredSimLifecycleTotalPages}</p>
