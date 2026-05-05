@@ -80,6 +80,25 @@ export function SIMFormModal({ isOpen, onClose, onSave, onBatchImport, sim }) {
             setIsSubmittingBatch(false);
         }
     };
+
+    const downloadExampleCSV = () => {
+      const rows = [
+        ['iccid'],
+        ['8901234567890123456'],
+        ['8901234567890123457'],
+      ];
+
+      const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sim_iccid_example.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
     return (<Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -227,7 +246,14 @@ export function SIMFormModal({ isOpen, onClose, onSave, onBatchImport, sim }) {
                 </div>
 
                 <div className="rounded-lg border border-[#f3f3f3] p-3">
-                  <p className="text-sm font-medium text-[#1f1f1f] mb-2">Excel format sample</p>
+                  <div className="flex items-start justify-between">
+                    <p className="text-sm font-medium text-[#1f1f1f] mb-2">Excel format sample</p>
+                    <div>
+                      <Button variant="outline" onClick={downloadExampleCSV}>
+                        Download Example
+                      </Button>
+                    </div>
+                  </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm border border-[#f3f3f3]">
                       <thead>

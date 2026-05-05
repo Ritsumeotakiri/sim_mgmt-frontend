@@ -223,6 +223,25 @@ export function MSISDNInventory({ msisdns, onAdd, onBatchImport, onEdit, onDelet
         setIsBatchSubmitting(false);
       }
     };
+
+    const downloadExampleCSV = () => {
+      const rows = [
+        ['msisdn', 'price (optional)', 'status (optional)'],
+        ['+855012345678', '5', 'available'],
+        ['+855098765432', '10', 'reserved'],
+      ];
+
+      const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'msisdn_example.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
     const handleEdit = async () => {
         if (!onEdit)
             return;
@@ -539,19 +558,19 @@ export function MSISDNInventory({ msisdns, onAdd, onBatchImport, onEdit, onDelet
                 <Input type="file" accept=".xlsx" onChange={(e) => setBatchFile(e.target.files?.[0] || null)}/>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Default Status</Label>
                 <select value={batchStatus} onChange={(e) => setBatchStatus(e.target.value)} className="w-full rounded-md border border-[#c9c7c7] bg-white px-3 py-2 text-sm text-[#1f1f1f] focus:outline-none focus:border-[#1f1f1f]">
                   <option value="available">available</option>
                   <option value="assigned">assigned</option>
                   <option value="reserved">reserved</option>
                 </select>
-              </div>
+              </div> */}
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Default Price</Label>
                 <Input type="number" min="0" step="0.01" placeholder="0.00" value={batchPrice} onChange={(e) => setBatchPrice(e.target.value)}/>
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <Label>Branch</Label>
@@ -567,7 +586,14 @@ export function MSISDNInventory({ msisdns, onAdd, onBatchImport, onEdit, onDelet
               </div>
 
               <div className="rounded-lg border border-[#f3f3f3] p-3">
-                <p className="text-sm font-medium text-[#1f1f1f] mb-2">Excel format sample</p>
+                <div className="flex items-start justify-between">
+                  <p className="text-sm font-medium text-[#1f1f1f] mb-2">Excel format sample</p>
+                  <div>
+                    <Button variant="outline" onClick={downloadExampleCSV}>
+                      Download Example
+                    </Button>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border border-[#f3f3f3]">
                     <thead>
@@ -591,6 +617,7 @@ export function MSISDNInventory({ msisdns, onAdd, onBatchImport, onEdit, onDelet
                     </tbody>
                   </table>
                 </div>
+                <p className="text-xs text-[#828282] mt-2">Use a single column named msisdn. One MSISDN per row. Price and status are optional.</p>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
