@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Building2 } from "lucide-react";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Loading } from "@/presentation/components/ui/Loading";
 
 import { fetchSettings, updateSetting } from "@/data/services/backendApi/setting";
 
-export function SettingsPageView({ userRole, onAddBranch }) {
+export function SettingsPageView({ userRole}) {
   const isAdmin = userRole === "admin";
-  const [branchForm, setBranchForm] = useState({ name: "", location: "" });
-  const [addingBranch, setAddingBranch] = useState(false);
+  
 
   // System settings state
   const [, setSettings] = useState({});
@@ -84,25 +82,7 @@ export function SettingsPageView({ userRole, onAddBranch }) {
     setSettingsSaving(false);
   };
 
-  const handleAddBranch = async () => {
-    if (!isAdmin || typeof onAddBranch !== "function") {
-      return;
-    }
-    if (!branchForm.name.trim()) {
-      return;
-    }
-
-    setAddingBranch(true);
-    const success = await onAddBranch({
-      name: branchForm.name.trim(),
-      location: branchForm.location.trim(),
-    });
-    setAddingBranch(false);
-
-    if (success) {
-      setBranchForm({ name: "", location: "" });
-    }
-  };
+  
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
@@ -217,52 +197,6 @@ export function SettingsPageView({ userRole, onAddBranch }) {
               </>
             )}
           </div>
-        )}
-      </div>
-      <div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Building2 className="w-5 h-5 text-[#1f1f1f]" />
-          <h3 className="font-semibold text-[#1f1f1f]">Branch Management</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Input
-            placeholder="Branch name"
-            value={branchForm.name}
-            disabled={!isAdmin || addingBranch}
-            onChange={(event) =>
-              setBranchForm((prev) => ({ ...prev, name: event.target.value }))
-            }
-          />
-          <Input
-            placeholder="Location (optional)"
-            value={branchForm.location}
-            disabled={!isAdmin || addingBranch}
-            onChange={(event) =>
-              setBranchForm((prev) => ({
-                ...prev,
-                location: event.target.value,
-              }))
-            }
-          />
-        </div>
-
-        <div className="mt-4 flex justify-end">
-          <Button
-            onClick={handleAddBranch}
-            disabled={
-              !isAdmin || addingBranch || branchForm.name.trim().length < 2
-            }
-            className="bg-[#1f1f1f] hover:bg-[#1f1f1f]/90"
-          >
-            {addingBranch ? "Adding..." : "Add Branch"}
-          </Button>
-        </div>
-
-        {!isAdmin && (
-          <p className="text-sm text-[#f6a94c] mt-3">
-            Only administrators can add branches.
-          </p>
         )}
       </div>
     </div>
