@@ -3,6 +3,14 @@ import { toast } from "sonner";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Loading } from "@/presentation/components/ui/Loading";
+import { Checkbox } from "@/presentation/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/presentation/components/ui/select";
 
 import { fetchSettings, updateSetting } from "@/data/services/backendApi/setting";
 
@@ -20,8 +28,8 @@ export function SettingsPageView({ userRole}) {
   const [editFields, setEditFields] = useState({});
 
   const intervalPresets = [
-    { label: "1 second", value: "1000" },
-    { label: "10 seconds", value: "10000" },
+    // { label: "1 second", value: "1000" },
+    // { label: "10 seconds", value: "10000" },
     { label: "1 minute", value: "60000" },
     { label: "5 minutes", value: "300000" },
     { label: "10 minutes", value: "600000" },
@@ -30,6 +38,12 @@ export function SettingsPageView({ userRole}) {
     { label: "6 hours", value: "21600000" },
     { label: "12 hours", value: "43200000" },
     { label: "24 hours", value: "86400000" },
+  ];
+
+  const reportTimePresets = [
+    { label: "09:00", value: "09:00" },
+    { label: "12:00", value: "12:00" },
+    { label: "18:00", value: "18:00" },
   ];
 
   useEffect(() => {
@@ -45,9 +59,15 @@ export function SettingsPageView({ userRole}) {
             min_topup_amount: null,
             max_topup_amount: null,
             max_sim_per_customer: null,
+            telegram_weekly_report_enabled: "false",
+            telegram_monthly_report_enabled: "false",
+            telegram_report_send_time: "09:00",
         };
+
         data.forEach(({ name, value }) => {
-          obj[name] = value;
+          if (Object.prototype.hasOwnProperty.call(obj, name)) {
+            obj[name] = value;
+          }
         });
         setSettings(obj);
         setEditFields(obj);
@@ -86,15 +106,11 @@ export function SettingsPageView({ userRole}) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl border border-[#f3f3f3] shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-[#1f1f1f] mb-1">
-          System Settings
-        </h2>
-        <p className="text-sm text-[#828282]">Configure admin features.</p>
         {isAdmin && (
           <div className="mt-6 space-y-4">
-            <h3 className="font-semibold text-[#1f1f1f] mb-2">
+            <h1 className="text-lg font-semibold text-[#1f1f1f] mb-2">
               Scheduler & SIM Management
-            </h3>
+            </h1>
             {settingsLoading ? (
               <Loading message="Loading settings..." size="sm" />
             ) : (
@@ -181,6 +197,73 @@ export function SettingsPageView({ userRole}) {
                       min={1}
                       disabled={settingsSaving === true}
                     />
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="text-lg font-semibold text-[#1f1f1f]">Telegram Reports</h4>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-[#828282] mb-1">
+                        Send Time
+                      </label>
+                      <Select
+                        value={editFields.telegram_report_send_time || "09:00"}
+                        onValueChange={(value) =>
+                          handleSettingChange("telegram_report_send_time", value)
+                        }
+                        disabled={settingsSaving === true}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {reportTimePresets.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>
+                              {t.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-[#828282] mb-1">
+                        Weekly
+                      </label>
+                      <div className="flex items-center gap-2 rounded-md border border-[#f3f3f3] p-2 h-10">
+                        <Checkbox
+                          checked={String(editFields.telegram_weekly_report_enabled) === "true"}
+                          onCheckedChange={(checked) =>
+                            handleSettingChange(
+                              "telegram_weekly_report_enabled",
+                              checked === true ? "true" : "false",
+                            )
+                          }
+                          disabled={settingsSaving === true}
+                        />
+                        <span className="text-sm text-[#1f1f1f]">Send weekly report</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-[#828282] mb-1">
+                        Monthly
+                      </label>
+                      <div className="flex items-center gap-2 rounded-md border border-[#f3f3f3] p-2 h-10">
+                        <Checkbox
+                          checked={String(editFields.telegram_monthly_report_enabled) === "true"}
+                          onCheckedChange={(checked) =>
+                            handleSettingChange(
+                              "telegram_monthly_report_enabled",
+                              checked === true ? "true" : "false",
+                            )
+                          }
+                          disabled={settingsSaving === true}
+                        />
+                        <span className="text-sm text-[#1f1f1f]">Send monthly report</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end">

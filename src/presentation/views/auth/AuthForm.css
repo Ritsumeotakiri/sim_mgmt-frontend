@@ -1,0 +1,389 @@
+/* Scoped auth styles (PMG-style layout) using theme tokens.
+   Intentionally avoids global * / body resets. */
+
+.pmg-auth-scope,
+.pmg-auth-scope * {
+  box-sizing: border-box;
+}
+
+.pmg-auth-background {
+  min-height: 100vh;
+  width: 100%;
+  background: hsl(var(--background));
+}
+
+.pmg-auth-layout {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.pmg-auth-hero {
+  display: none;
+  background-color: hsl(var(--primary));
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  color: hsl(var(--primary-foreground));
+  position: relative;
+  overflow: hidden;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.pmg-auth-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--primary) / 0.35) 0%,
+    hsl(var(--primary) / 0.55) 70%,
+    hsl(var(--primary) / 0.65) 100%
+  );
+  pointer-events: none;
+}
+
+.pmg-auth-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pmg-hero-illustration {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 5rem 4rem 2.5rem;
+  position: relative;
+}
+
+.pmg-hero-blob {
+  position: absolute;
+  left: -120px;
+  top: -120px;
+  width: 340px;
+  height: 340px;
+  border-radius: 999px;
+  background: hsl(var(--primary-foreground) / 0.12);
+}
+
+.pmg-hero-blob--2 {
+  left: auto;
+  top: auto;
+  right: -160px;
+  bottom: -160px;
+  width: 420px;
+  height: 420px;
+}
+
+.pmg-hero-frame {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 0 auto;
+  border-radius: 28px;
+  border: 1px solid hsl(var(--primary-foreground) / 0.18);
+  background: hsl(var(--primary-foreground) / 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pmg-hero-shape {
+  position: absolute;
+  left: 72px;
+  top: 86px;
+  width: 150px;
+  height: 190px;
+  border-radius: 22px;
+  border: 1px solid hsl(var(--primary-foreground) / 0.18);
+  background: hsl(var(--primary-foreground) / 0.08);
+}
+
+.pmg-hero-shape--2 {
+  left: auto;
+  top: 110px;
+  right: 70px;
+  width: 82px;
+  height: 130px;
+}
+
+.pmg-hero-dot {
+  position: absolute;
+  left: 116px;
+  bottom: 92px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: hsl(var(--primary-foreground) / 0.55);
+}
+
+.pmg-hero-copy {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 4rem 5rem;
+  text-align: center;
+}
+
+.pmg-hero-copy h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.pmg-hero-copy p {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  color: hsl(var(--primary-foreground) / 0.72);
+}
+
+.pmg-hero-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.pmg-hero-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: hsl(var(--primary-foreground) / 0.35);
+}
+
+.pmg-hero-dots span.is-active {
+  width: 28px;
+  background: hsl(var(--primary-foreground) / 0.65);
+}
+
+.pmg-auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--background));
+}
+
+.pmg-form-box {
+  width: 100%;
+  max-width: 460px;
+  padding: 5rem 2.75rem;
+  text-align: center;
+  color: hsl(var(--foreground));
+}
+
+.pmg-form-header .pmg-form-app {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.pmg-form-header .pmg-form-sub {
+  margin-top: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.95rem;
+}
+
+.pmg-form-sub {
+  margin-top: 1rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.pmg-form-box h1 {
+  margin: 0.5rem 0 0;
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.pmg-form {
+  width: 100%;
+  margin-top: 3rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.pmg-field {
+  text-align: left;
+}
+
+.pmg-field-label {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+.pmg-field-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pmg-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.pmg-link:hover {
+  color: hsl(var(--foreground));
+  text-decoration: underline;
+}
+
+.pmg-link-underline {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.pmg-password {
+  position: relative;
+}
+
+.pmg-line-input {
+  width: 100%;
+  height: 48px;
+  padding: 0;
+  border: 0 !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none !important;
+}
+
+.pmg-line-input:focus {
+  outline: none;
+}
+
+/* Stronger specificity to override shadcn input focus ring */
+input.pmg-line-input:focus,
+input.pmg-line-input:focus-visible,
+input[data-slot="input"].pmg-line-input:focus,
+input[data-slot="input"].pmg-line-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  border-bottom-color: hsl(var(--primary)) !important;
+}
+
+/* Firefox inner focus removal */
+input.pmg-line-input::-moz-focus-inner { border: 0; }
+
+/* Also target the default tailwind 'border' class specificity produced by component */
+input.border.pmg-line-input { border: 0 !important; }
+input.rounded-md.pmg-line-input { border-radius: 0 !important; }
+
+/* Prevent browser autofill from adding a yellow background or inner shadow */
+input.pmg-line-input:-webkit-autofill,
+input.pmg-line-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
+  box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+}
+
+/* Make the underline a bit more visible on focus without a box */
+input.pmg-line-input {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.pmg-line-input--with-icon {
+  padding-right: 2.25rem;
+}
+
+.pmg-icon-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+}
+
+.pmg-icon-btn:hover {
+  color: hsl(var(--foreground));
+}
+
+.pmg-error {
+  margin-top: -1rem;
+  font-size: 0.875rem;
+  color: hsl(var(--destructive));
+}
+
+.btn {
+  width: 100%;
+  height: 52px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pmg-pill {
+  border-radius: 999px;
+}
+
+.pmg-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}
+
+.pmg-divider span {
+  height: 1px;
+  background: hsl(var(--border));
+}
+
+.pmg-divider em {
+  font-style: normal;
+  font-size: 0.9rem;
+}
+
+.pmg-google-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+}
+
+.pmg-google-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  font-size: 0.75rem;
+}
+
+.pmg-footer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+}
+
+@media screen and (min-width: 1024px) {
+  .pmg-auth-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pmg-auth-hero {
+    display: flex;
+  }
+}
+
+@media screen and (max-width: 650px) {
+  .pmg-form-box {
+    padding: 3.5rem 1.75rem;
+  }
+}

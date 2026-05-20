@@ -12,23 +12,9 @@ const UNAUTHENTICATED_STATE = {
     userEmail: null,
     userName: '',
     userBranchId: null,
+    userId: null,
     token: null,
 };
-
-function decodeJwtPayload(token) {
-    try {
-        const payloadPart = String(token || '').split('.')[1];
-        if (!payloadPart) {
-            return null;
-        }
-        const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-        const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
-        return JSON.parse(atob(padded));
-    }
-    catch {
-        return null;
-    }
-}
 
 function getStoredAuth() {
     if (typeof window === 'undefined') {
@@ -40,25 +26,18 @@ function getStoredAuth() {
             return UNAUTHENTICATED_STATE;
         }
         const parsed = JSON.parse(raw);
-        if (!parsed?.token || !parsed?.userRole || !parsed?.userEmail || !parsed?.userName) {
+        if (!parsed?.userRole || !parsed?.userName) {
             return UNAUTHENTICATED_STATE;
         }
 
-        const tokenPayload = decodeJwtPayload(parsed.token);
-        const resolvedRole = tokenPayload
-            ? resolveFrontendUserRole({ role: tokenPayload.role, username: tokenPayload.username, user_id: tokenPayload.user_id })
-            : parsed.userRole;
-        const resolvedBranchId = tokenPayload?.branch_id ?? parsed.userBranchId ?? null;
-        const resolvedUserId = tokenPayload?.user_id ?? parsed.userId ?? null;
-
         return {
             isAuthenticated: true,
-            userRole: resolvedRole,
-            userEmail: parsed.userEmail,
+            userRole: parsed.userRole,
+            userEmail: parsed.userEmail ?? null,
             userName: parsed.userName,
-            userBranchId: resolvedBranchId,
-            userId: resolvedUserId,
-            token: parsed.token,
+            userBranchId: parsed.userBranchId ?? null,
+            userId: parsed.userId ?? null,
+            token: null,
         };
     }
     catch {
@@ -79,23 +58,7 @@ export function useAuth() {
 
     useEffect(() => {
         const handleAuthExpired = (event) => {
-            const eventToken = event?.detail?.token || null;
-            let currentStoredToken = null;
-
-            if (typeof window !== 'undefined') {
-                try {
-                    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
-                    const parsed = raw ? JSON.parse(raw) : null;
-                    currentStoredToken = parsed?.token || null;
-                }
-                catch {
-                    currentStoredToken = null;
-                }
-            }
-
-            if (eventToken && currentStoredToken && eventToken !== currentStoredToken) {
-                return;
-            }
+            void event;
 
             setAuth(UNAUTHENTICATED_STATE);
             clearAuthStorage();
@@ -105,6 +68,50 @@ export function useAuth() {
         return () => {
             window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
         };
+    }, []);
+
+    useEffect(() => {
+        // Try to restore an existing session via HttpOnly cookie.
+        // This keeps the user logged in after refresh even though the JWT isn't stored in localStorage.
+        const restoreSession = async () => {
+            try {
+                const me = await backendApi.me();
+                const resolvedRole = resolveFrontendUserRole(me);
+                const userNames = {
+                    admin: 'Administrator',
+                    manager: 'Manager',
+                    operator: 'Operator',
+                    viewer: 'Viewer',
+                };
+                const restoredAuth = {
+                    isAuthenticated: true,
+                    userRole: resolvedRole,
+                    userEmail: auth.userEmail,
+                    userName: userNames[resolvedRole] || auth.userName || '',
+                    userBranchId: me.branch_id ?? auth.userBranchId ?? null,
+                    userId: me.user_id ?? auth.userId ?? null,
+                    token: null,
+                };
+                setAuth(restoredAuth);
+                if (typeof window !== 'undefined') {
+                    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+                        isAuthenticated: true,
+                        userRole: restoredAuth.userRole,
+                        userEmail: restoredAuth.userEmail,
+                        userName: restoredAuth.userName,
+                        userBranchId: restoredAuth.userBranchId,
+                        userId: restoredAuth.userId,
+                    }));
+                }
+            }
+            catch {
+                // Ignore restore failures; auth state will be cleared by 401 handling when needed.
+            }
+        };
+
+        restoreSession();
+        // run once on mount
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     const handleLogin = async (identifier, password) => {
         const userNames = {
@@ -127,7 +134,7 @@ export function useAuth() {
                 userName,
                 userBranchId: loginResult.user?.branch_id ?? null,
                 userId,
-                token: loginResult.token,
+                token: null,
             });
             window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
                 isAuthenticated: true,
@@ -136,7 +143,6 @@ export function useAuth() {
                 userName,
                 userBranchId: loginResult.user?.branch_id ?? null,
                 userId,
-                token: loginResult.token,
             }));
             toast.success(`Welcome, ${userName}!`);
             return true;

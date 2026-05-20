@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend, PieChart, Pie, Cell } from 'recharts';
-import { getPlanRevenue, getRevenueSummary } from '@/data/services/backendApi/dashboard';
+import { getPlanRevenue, getRevenueSummary, getRevenues } from '@/data/services/backendApi/dashboard';
 import { Loading } from '@/presentation/components/ui/Loading';
 
 // --- Reusable Skeleton Loader ---
@@ -32,9 +32,30 @@ export function ReportPanel({ branchPerformance = [] }) {
     const [planRevenueLoading, setPlanRevenueLoading] = useState(false);
     const [planRevenueByBranch] = useState([]); // Not used but kept for completeness
     const [revenueSummary, setRevenueSummary] = useState({ perBranch: [], byType: [], total: 0 });
-    const [revenueRows] = useState([]); // Not used in this snippet but likely needed for table
-    const [revenueLoading] = useState(false); // Not used in this snippet but likely needed for table
-    // Remove unused getPlanRevenueByBranch, getRevenues imports
+    const [revenueRows, setRevenueRows] = useState([]);
+    const [revenueLoading, setRevenueLoading] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+    const loadRecentRevenues = async () => {
+      setRevenueLoading(true);
+      try {
+        const res = await getRevenues({ page: 1, limit: 10 });
+        const rows = Array.isArray(res?.rows) ? res.rows : [];
+        if (isActive) setRevenueRows(rows);
+      } catch (error) {
+        console.error('Error fetching recent revenue rows:', error);
+        if (isActive) setRevenueRows([]);
+      } finally {
+        if (isActive) setRevenueLoading(false);
+      }
+    };
+    loadRecentRevenues();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   useEffect(() => {
     let isActive = true;
     const loadPlanRevenue = async () => {

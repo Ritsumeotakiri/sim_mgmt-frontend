@@ -5,7 +5,7 @@ import { isAuthExpiredError } from '@/data/services/backendApi/client';
 import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequestWithMeta } from '@/data/services/backendApi/client';
 import { mapUser } from '@/data/services/backendApi/mappers';
-export function useUserManagementViewModel({ isAuthenticated, authToken }) {
+export function useUserManagementViewModel({ isAuthenticated }) {
     const [users, setUsers] = useState([]);
     const [totalUsers, setTotalUsers] = useState(0);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -14,7 +14,7 @@ export function useUserManagementViewModel({ isAuthenticated, authToken }) {
         setRefreshKey((previous) => previous + 1);
     };
     useEffect(() => {
-        if (!isAuthenticated || !authToken) {
+        if (!isAuthenticated) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setUsers([]);
             setTotalUsers(0);
@@ -35,7 +35,7 @@ export function useUserManagementViewModel({ isAuthenticated, authToken }) {
             }
         };
         loadUsers();
-    }, [isAuthenticated, authToken, refreshKey]);
+    }, [isAuthenticated, refreshKey]);
     const handleAddUser = async (userData) => {
         try {
             const created = await backendApi.createUser(userData);

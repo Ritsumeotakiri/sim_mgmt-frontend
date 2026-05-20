@@ -20,25 +20,6 @@ export function isAuthExpiredError(error) {
     return Boolean(error && typeof error === 'object' && error.code === AUTH_EXPIRED_ERROR_CODE);
 }
 
-function getTokenExpiryMs(token) {
-    try {
-        const payloadPart = token.split('.')[1];
-        if (!payloadPart) {
-            return null;
-        }
-        const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-        const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
-        const payload = JSON.parse(atob(padded));
-        if (typeof payload?.exp !== 'number') {
-            return null;
-        }
-        return payload.exp * 1000;
-    }
-    catch {
-        return null;
-    }
-}
-
 function notifyAuthExpired(token) {
     if (authExpiredNotified) {
         return false;
@@ -53,41 +34,12 @@ function notifyAuthExpired(token) {
     return true;
 }
 
-function getAuthToken() {
-    if (typeof window === 'undefined')
-        return null;
-    try {
-        const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
-        if (!raw)
-            return null;
-        const parsed = JSON.parse(raw);
-        return parsed.token || null;
-    }
-    catch {
-        return null;
-    }
-}
-
-function getRequestToken(path) {
-    if (path.startsWith('/auth/') && path !== '/auth/logout') {
-        return null;
-    }
-    const token = getAuthToken();
-    if (!token) {
-        return null;
-    }
-    const tokenExpiryMs = getTokenExpiryMs(token);
-    if (tokenExpiryMs && tokenExpiryMs <= Date.now()) {
-        notifyAuthExpired(token);
-        throw createAuthExpiredError();
-    }
-    return token;
-}
+// Cookie-based auth: JWT is stored in an HttpOnly cookie, so frontend JS can't read it.
+// The browser sends it automatically when `credentials: 'include'` is set.
 
 async function executeRequest(path, init) {
     const method = init?.method || 'GET';
     const url = `${API_BASE}${path}`;
-    const token = getRequestToken(path);
     const isFormData = typeof FormData !== 'undefined' && init?.body instanceof FormData;
     const defaultHeaders = isFormData ? {} : { 'Content-Type': 'application/json' };
     if (import.meta.env.DEV) {
@@ -95,12 +47,12 @@ async function executeRequest(path, init) {
     }
     try {
         const response = await fetch(url, {
+            ...init,
+            credentials: 'include',
             headers: {
                 ...defaultHeaders,
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 ...(init?.headers || {}),
             },
-            ...init,
         });
     let payload = null;
     try {
@@ -112,9 +64,9 @@ async function executeRequest(path, init) {
     if (import.meta.env.DEV) {
         console.info(`[API] ${method} ${url} response`, { status: response.status, payload });
     }
-    const isUnauthorized = response.status === 401 && !path.startsWith('/auth/');
+    const isUnauthorized = response.status === 401 && path !== '/auth/login';
     if (isUnauthorized) {
-        notifyAuthExpired(token);
+        notifyAuthExpired(null);
         throw createAuthExpiredError();
     }
         if (!response.ok || payload?.success === false) {

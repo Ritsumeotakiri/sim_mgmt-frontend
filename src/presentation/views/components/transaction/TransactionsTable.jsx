@@ -538,7 +538,7 @@ export function TransactionsTable({
     () => ({
       transaction: {
         label: 'Transaction',
-        renderCell: (transaction) => {
+        renderCell: (transaction, rowNumber) => {
           const displayType = resolveDisplayType(transaction);
           const Icon = transactionIcons[displayType] || ShoppingCart;
           const iconColor =
@@ -559,7 +559,7 @@ export function TransactionsTable({
                   <span className="text-sm text-[#1f1f1f] font-medium">
                     {formatTransactionType(displayType)}
                   </span>
-                  <p className="text-xs text-[#828282]">#{transaction.id}</p>
+                  <p className="text-xs text-[#828282]"> # {rowNumber}</p>
                 </div>
               </div>
             </td>
@@ -671,9 +671,13 @@ export function TransactionsTable({
   );
 
   const renderTransactionRow = useCallback(
-    (transaction) =>
-      columnOrder.map((columnId) => columns[columnId].renderCell(transaction)),
-    [columnOrder, columns]
+    (transaction, rowIndex) => {
+      const rowNumber = startIndex + rowIndex + 1;
+      return columnOrder.map((columnId) =>
+        columns[columnId].renderCell(transaction, rowNumber)
+      );
+    },
+    [columnOrder, columns, startIndex]
   );
 
   return (
@@ -750,7 +754,7 @@ export function TransactionsTable({
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
-              <option value="custom">Custom</option>
+              {/* <option value="custom">Custom</option> */}
               <option value="all">All</option>
             </select>
             <input
@@ -844,7 +848,7 @@ export function TransactionsTable({
                 </td>
               </tr>
             ) : (
-              paginatedTransactions.map((transaction) => (
+              paginatedTransactions.map((transaction, rowIndex) => (
                 <tr
                   key={transaction.id}
                   className="border-b border-[#f3f3f3] hover:bg-[#fafafa] transition-colors cursor-pointer"
@@ -853,8 +857,10 @@ export function TransactionsTable({
                     setModalOpen(true);
                   }}
                 >
-                  {renderTransactionRow(transaction)}
+                  {renderTransactionRow(transaction, rowIndex)}
                 </tr>
+              
+                
               ))
             )}
           </tbody>

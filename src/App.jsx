@@ -52,13 +52,11 @@ function App() {
         userName: auth.userName,
         userId: auth.userId,
         isAuthenticated: auth.isAuthenticated,
-        authToken: auth.token,
         userRole: auth.userRole,
         userBranchId: auth.userBranchId,
     });
     const userManagement = useUserManagementViewModel({
         isAuthenticated: auth.isAuthenticated,
-        authToken: auth.token,
     });
     const msisdnManagement = useMSISDNManagement();
 
@@ -321,11 +319,20 @@ function App() {
     // Branch Management page lazy import
     const BranchManagementView = lazy(() => import('@/presentation/views/operator/BranchManagementView'));
 
+    const handleTeamMemberBack = () => {
+        const from = location?.state && typeof location.state.from === 'string' ? location.state.from : null;
+        if (from) {
+            navigate(from);
+            return;
+        }
+        navigate('/dashboard');
+    };
+
     const renderContent = () => {
         switch (currentView) {
             case 'dashboard':
                 if (teamMemberIdFromPath) {
-                    return (<TeamMemberPerformance memberId={teamMemberIdFromPath} sims={simManagement.sims} customers={simManagement.customers} transactions={simManagement.transactions} users={userManagement.users} onBack={() => navigate('/dashboard')} />);
+                    return (<TeamMemberPerformance memberId={teamMemberIdFromPath} sims={simManagement.sims} customers={simManagement.customers} transactions={simManagement.transactions} users={userManagement.users} onBack={handleTeamMemberBack} />);
                 }
                 if (userRole === 'admin' && branchDetailNameFromPath) {
                     return (<BranchPerformanceDetail branchName={branchDetailNameFromPath} operatorPerformance={simManagement.operatorPerformance} users={userManagement.users} transactions={simManagement.transactions} onBack={() => navigate('/dashboard')} onOpenUserManagement={() => navigateToView('users')} onOpenSIMManagement={() => navigateToView('sims')} onOpenTransactionsManagement={() => navigateToView('transactions')}/>);

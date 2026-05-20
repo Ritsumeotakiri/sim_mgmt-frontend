@@ -4,7 +4,7 @@ import { backendApi } from '@/data/services/backendApi';
 import { isAuthExpiredError } from '@/data/services/backendApi/client';
 import { ENDPOINTS } from '@/data/services/endpoints';
 import { apiRequestWithMeta } from '@/data/services/backendApi/client';
-export function useSIMManagementViewModel({ userName, userId, isAuthenticated, authToken, userRole = null, userBranchId = null, }) {
+export function useSIMManagementViewModel({ userName, userId, isAuthenticated, userRole = null, userBranchId = null, }) {
     const [sims, setSims] = useState([]);
     const [msisdns, setMsisdns] = useState([]);
     const [customers, setCustomers] = useState([]);
@@ -32,7 +32,7 @@ export function useSIMManagementViewModel({ userName, userId, isAuthenticated, a
         setRefreshKey((previous) => previous + 1);
     };
     useEffect(() => {
-        if (!isAuthenticated || !authToken) {
+        if (!isAuthenticated) {
             setSims([]);
             setMsisdns([]);
             setCustomers([]);
@@ -127,7 +127,7 @@ export function useSIMManagementViewModel({ userName, userId, isAuthenticated, a
             }
         };
         loadData();
-    }, [isAuthenticated, authToken, userRole, userBranchId, refreshKey]);
+    }, [isAuthenticated, userRole, userBranchId, refreshKey]);
     // Calculate stats
     const stats = useMemo(() => ({
         totalSIMs: totals.totalSIMs ?? sims.length,

@@ -12,7 +12,6 @@ export async function login(params) {
         }),
     });
     return {
-        token: data.token,
         user: data.user,
     };
 }
@@ -20,6 +19,12 @@ export async function login(params) {
 export async function logout() {
     await apiRequest(ENDPOINTS.auth.logout, {
         method: 'POST',
+    });
+}
+
+export async function me() {
+    return apiRequest(ENDPOINTS.auth.me, {
+        method: 'GET',
     });
 }
 
